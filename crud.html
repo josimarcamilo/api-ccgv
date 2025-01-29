@@ -1,0 +1,114 @@
+{{define "crud"}}
+{{ template "header.html" }}
+    <h2>Gerenciamento de <span id="entity-title"></span></h2>
+
+    <!-- Formulário de Cadastro/Edição -->
+    <form id="crud-form"></form>
+
+    <!-- Tabela de Listagem -->
+    <table id="data-table" border="1" width="100%">
+        <thead>
+            <tr></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Define a entidade a partir da URL (exemplo: crud.html?entity=categorias)
+            const entity = {{.}};
+            
+            // Carregar configuração do backend
+            const configResponse = await fetch(`/crud-config/${entity}`);
+            const config = await configResponse.json();
+
+            document.title = `Gerenciamento de ${config.title}`;
+            document.getElementById("entity-title").innerText = config.title;
+
+            const apiUrl = config.apiUrl;
+            const tableHead = document.querySelector("#data-table thead tr");
+            const tableBody = document.querySelector("#data-table tbody");
+            const form = document.getElementById("crud-form");
+
+            // Criar cabeçalho da tabela
+            tableHead.innerHTML = "";
+            config.fields.forEach(field => {
+                const th = document.createElement("th");
+                th.innerText = field.label;
+                tableHead.appendChild(th);
+            });
+            tableHead.innerHTML += "<th>Ações</th>";
+
+            // Criar campos do formulário dinamicamente
+            form.innerHTML = "";
+            config.fields.forEach(field => {
+                if (field.readonly) return;
+                form.innerHTML += `
+                    <label>${field.label}:</label>
+                    <input type="${field.type}" name="${field.name}" ${field.required ? "required" : ""}>
+                `;
+            });
+            form.innerHTML += `<button type="submit">Salvar</button>`;
+
+            // Carregar Dados da API
+            async function loadData() {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                tableBody.innerHTML = "";
+                console.log("data", data)
+                data.forEach(item => {
+                    const row = document.createElement("tr");
+                    config.fields.forEach(field => {
+                        console.log(field)
+                        row.innerHTML += `<td>${item[field.name] || ""}</td>`;
+                    });
+                    row.innerHTML += `
+                        <td>
+                            <button onclick="editItem(${item.id})">✏️ Editar</button>
+                            <button onclick="deleteItem(${item.id})">🗑️ Deletar</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            // Criar Novo Registro
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                console.log('apiUrl', apiUrl)
+                await fetch(apiUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                });
+
+                form.reset();
+                loadData();
+            });
+
+            // Deletar Registro
+            window.deleteItem = async (id) => {
+                if (confirm("Tem certeza que deseja excluir este item?")) {
+                    await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+                    loadData();
+                }
+            };
+
+            // Editar Registro
+            window.editItem = async (id) => {
+                const response = await fetch(`${apiUrl}/${id}`);
+                const data = await response.json();
+                config.fields.forEach(field => {
+                    if (!field.readonly) {
+                        document.querySelector(`[name="${field.name}"]`).value = data[field.name] || "";
+                    }
+                });
+            };
+
+            // Carregar dados ao iniciar
+            loadData();
+        });
+    </script>
+{{ template "footer.html" }}
+{{end}}

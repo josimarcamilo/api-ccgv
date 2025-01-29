@@ -47,6 +47,7 @@ func main() {
 		&models.User{},
 		&models.Account{},
 		&models.Team{},
+		&models.Category{},
 	); err != nil {
 		log.Fatalf("Erro ao migrar o banco de dados: %v", err)
 	}
@@ -358,7 +359,55 @@ func main() {
 		return c.JSON(http.StatusOK, accounts)
 	})
 
+	e.GET("/crud-config/:entity", GetCrudConfig)
+	e.GET("/crud/:entity", Crud)
+
+	categoryHandler := models.CRUDHandler{DB: db, Model: &models.Category{}, TableName: "categories"}
+
+	// Registrar rotas
+	e.POST("/categories", categoryHandler.Create)
+	e.GET("/categories", categoryHandler.List)
+	e.GET("/categories/:id", categoryHandler.GetByID)
+	e.PUT("/categories/:id", categoryHandler.Update)
+	e.DELETE("/categories/:id", categoryHandler.Delete)
+
 	e.Logger.Fatal(e.Start(":8000"))
+}
+
+func GetCrudConfig(c echo.Context) error {
+	entity := c.Param("entity")
+
+	configs := map[string]interface{}{
+		"categories": map[string]interface{}{
+			"entity": "categories",
+			"title":  "Categorias",
+			"apiUrl": "http://localhost:8000/categories",
+			"fields": []map[string]interface{}{
+				{"name": "id", "label": "ID", "type": "number", "readonly": true},
+				{"name": "name", "label": "Nome", "type": "text", "required": true},
+			},
+		},
+		"accounts": map[string]interface{}{
+			"entity": "accounts",
+			"title":  "Contas Bancárias",
+			"apiUrl": "/accounts",
+			"fields": []map[string]interface{}{
+				{"name": "id", "label": "ID", "type": "number", "readonly": true},
+				{"name": "name", "label": "Nome", "type": "text", "required": true},
+				{"name": "balance", "label": "Saldo", "type": "number", "required": true},
+			},
+		},
+	}
+
+	if config, exists := configs[entity]; exists {
+		return c.JSON(http.StatusOK, config)
+	}
+	return c.JSON(http.StatusNotFound, map[string]string{"error": "Configuração não encontrada"})
+}
+
+func Crud(c echo.Context) error {
+	entity := c.Param("entity")
+	return c.Render(http.StatusOK, "crud", entity)
 }
 
 func Hello(c echo.Context) error {
