@@ -1,0 +1,19 @@
+{{define "user-create"}}
+{{ template "header.html" }}
+<h2>Adicione Usuários ao seu time</h2>
+<form action="/users" method="POST">
+    <label for="name">Nome:</label>
+    <input type="text" name="name" id="name" required>
+    <label for="email">Email:</label>
+    <input type="email" name="email" id="email" required>
+    <label for="password">Senha:</label>
+    <input type="password" name="password" id="password" required>
+    <select name="role">
+        <option value="cc-secretaria">Secretária CC</option>
+        <option value="cc-tesouraria">Tesoureiro CC</option>
+        <option value="cc-fiscal">Cons. Fiscal</option>
+    </select>
+    <button type="submit">Adicionar</button>
+</form>
+{{ template "footer.html" }}
+{{end}}

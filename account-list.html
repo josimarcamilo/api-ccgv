@@ -1,0 +1,22 @@
+{{define "account-list"}}
+{{ template "header.html" }}
+<h2>Minhas Contas</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Saldo</th>
+            </tr>
+        </thead>
+        <tbody id="accounts-table">
+            <tr>
+                <td colspan="3">Carregando...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script src="/static/accounts.js"></script>
+
+{{ template "footer.html" }}
+{{end}}

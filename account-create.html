@@ -1,0 +1,13 @@
+{{define "account"}}
+{{ template "header.html" }}
+<h2>Cadastrar uma conta</h2>
+<form action="/accounts" method="POST">
+    <label for="name">Nome da Conta:</label>
+    <input type="text" name="name" id="name" required>
+    <label for="balance">Saldo Inicial:</label>
+    <input type="number" name="balance" id="balance" step="0.00" required>
+    <button type="submit">Cadastrar</button>
+</form>
+
+{{ template "footer.html" }}
+{{end}}

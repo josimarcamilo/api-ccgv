@@ -1,0 +1,10 @@
+{{define "team-create"}}
+{{ template "header.html" }}
+<h2>Crie um time para voce gerenciar</h2>
+<form action="/teams" method="POST">
+    <label for="name">Nome:</label>
+    <input type="text" name="name" id="name" required>
+    <button type="submit">Registrar</button>
+</form>
+{{ template "footer.html" }}
+{{end}}
