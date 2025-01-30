@@ -292,77 +292,78 @@ func main() {
 		})
 	})
 
-	e.GET("/accounts/create", AccountCreate)
-	e.GET("/accounts/list", AccountList)
+	// e.GET("/accounts/create", AccountCreate)
+	// // e.GET("/accounts/list", AccountList)
 
-	e.POST("/accounts", func(c echo.Context) error {
-		// Recuperar a sessão
-		session, err := storeSessions.Get(c.Request(), "session-id")
-		if err != nil {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
-		}
+	// e.POST("/accounts", func(c echo.Context) error {
+	// 	// Recuperar a sessão
+	// 	session, err := storeSessions.Get(c.Request(), "session-id")
+	// 	if err != nil {
+	// 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
+	// 	}
 
-		// Obter o user_id da sessão
-		userLogged, ok := session.Values["user"].(models.User)
-		if !ok || userLogged.ID == 0 {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
-		}
+	// 	// Obter o user_id da sessão
+	// 	userLogged, ok := session.Values["user"].(models.User)
+	// 	if !ok || userLogged.ID == 0 {
+	// 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
+	// 	}
 
-		// Fazer o bind dos dados do JSON para o modelo Account
-		var account models.Account
-		if err := c.Bind(&account); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": "Dados inválidos",
-			})
-		}
+	// 	// Fazer o bind dos dados do JSON para o modelo Account
+	// 	var account models.Account
+	// 	if err := c.Bind(&account); err != nil {
+	// 		return c.JSON(http.StatusBadRequest, map[string]string{
+	// 			"error": "Dados inválidos",
+	// 		})
+	// 	}
 
-		// Verificar campos obrigatórios
-		if account.Name == "" {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": "O nome da conta é obrigatório",
-			})
-		}
+	// 	// Verificar campos obrigatórios
+	// 	if account.Name == "" {
+	// 		return c.JSON(http.StatusBadRequest, map[string]string{
+	// 			"error": "O nome da conta é obrigatório",
+	// 		})
+	// 	}
 
-		account.TeamID = userLogged.TeamID
+	// 	account.TeamID = userLogged.TeamID
 
-		// Salvar no banco de dados
-		if err := db.Create(&account).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"error": "Erro ao salvar conta",
-			})
-		}
+	// 	// Salvar no banco de dados
+	// 	if err := db.Create(&account).Error; err != nil {
+	// 		return c.JSON(http.StatusInternalServerError, map[string]string{
+	// 			"error": "Erro ao salvar conta",
+	// 		})
+	// 	}
 
-		return c.Redirect(http.StatusSeeOther, "/accounts/list")
-	})
+	// 	return c.Redirect(http.StatusSeeOther, "/accounts/list")
+	// })
 
-	e.GET("/accounts", func(c echo.Context) error {
-		// Recuperar a sessão
-		session, err := storeSessions.Get(c.Request(), "session-id")
-		if err != nil {
-			return c.Redirect(http.StatusSeeOther, "/login")
-		}
+	// e.GET("/accounts", func(c echo.Context) error {
+	// 	// Recuperar a sessão
+	// 	session, err := storeSessions.Get(c.Request(), "session-id")
+	// 	if err != nil {
+	// 		return c.Redirect(http.StatusSeeOther, "/login")
+	// 	}
 
-		// Obter o user_id da sessão
-		userID, ok := session.Values["userID"].(uint)
-		if !ok || userID == 0 {
-			return c.Redirect(http.StatusSeeOther, "/login")
-		}
+	// 	// Obter o user_id da sessão
+	// 	userID, ok := session.Values["userID"].(uint)
+	// 	if !ok || userID == 0 {
+	// 		return c.Redirect(http.StatusSeeOther, "/login")
+	// 	}
 
-		// Buscar contas do usuário
-		var accounts []models.Account
-		if err := db.Where("user_id = ?", userID).Find(&accounts).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"error": "Erro ao buscar contas",
-			})
-		}
+	// 	// Buscar contas do usuário
+	// 	var accounts []models.Account
+	// 	if err := db.Where("user_id = ?", userID).Find(&accounts).Error; err != nil {
+	// 		return c.JSON(http.StatusInternalServerError, map[string]string{
+	// 			"error": "Erro ao buscar contas",
+	// 		})
+	// 	}
 
-		return c.JSON(http.StatusOK, accounts)
-	})
+	// 	return c.JSON(http.StatusOK, accounts)
+	// })
 
 	e.GET("/crud-config/:entity", GetCrudConfig)
 	e.GET("/crud/:entity", Crud)
 
 	categoryHandler := models.CRUDHandler{DB: db, Model: &models.Category{}, TableName: "categories"}
+	accountHandler := models.CRUDHandler{DB: db, Model: &models.Account{}, TableName: "accounts"}
 
 	// Registrar rotas
 	e.POST("/categories", categoryHandler.Create)
@@ -370,6 +371,12 @@ func main() {
 	e.GET("/categories/:id", categoryHandler.GetByID)
 	e.PUT("/categories/:id", categoryHandler.Update)
 	e.DELETE("/categories/:id", categoryHandler.Delete)
+
+	e.POST("/accounts", accountHandler.Create)
+	e.GET("/accounts", accountHandler.List)
+	e.GET("/accounts/:id", accountHandler.GetByID)
+	e.PUT("/accounts/:id", accountHandler.Update)
+	e.DELETE("/accounts/:id", accountHandler.Delete)
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
@@ -389,12 +396,12 @@ func GetCrudConfig(c echo.Context) error {
 		},
 		"accounts": map[string]interface{}{
 			"entity": "accounts",
-			"title":  "Contas Bancárias",
-			"apiUrl": "/accounts",
+			"title":  "Contas Contábeis",
+			"apiUrl": "http://localhost:8000/accounts",
 			"fields": []map[string]interface{}{
 				{"name": "id", "label": "ID", "type": "number", "readonly": true},
 				{"name": "name", "label": "Nome", "type": "text", "required": true},
-				{"name": "balance", "label": "Saldo", "type": "number", "required": true},
+				{"name": "balance", "label": "Saldo", "type": "text", "readonly": true},
 			},
 		},
 	}

@@ -1,10 +1,15 @@
 package models
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"reflect"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -35,7 +40,7 @@ type Team struct {
 
 type Category struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
-	Name      string         `gorm:"size:255;not null" json:"name"`
+	Name      string         `gorm:"size:255;not null" form:"name" json:"name"`
 	TeamID    uint           `gorm:"index" json:"team_id"` // FK para Time
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -43,21 +48,29 @@ type Category struct {
 }
 
 type Account struct {
-	gorm.Model
-	Name    string  `gorm:"size:255;not null"`
-	Balance float64 `gorm:"not null;default:0.0"`
-	TeamID  uint    `gorm:"index"` // FK para Time
+	ID        uint           `gorm:"primarykey" json:"id"`
+	Name      string         `gorm:"size:255;not null" json:"name"`
+	Balance   float32        `gorm:"not null;default:0" json:"balance,string"`
+	TeamID    uint           `gorm:"index"` // FK para Time
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 }
 
 type Transaction struct {
-	gorm.Model
-	Type          string  `gorm:"size:50;not null"` // Ex: "entrada 1", "saída 2", "transferência 3"
-	Amount        float64 `gorm:"not null"`
-	Description   string  `gorm:"size:500"`
-	BankAccountID uint    `gorm:"index"`                    // FK para Conta Bancária
-	CategoryID    uint    `gorm:"index"`                    // FK para Categoria
-	TeamID        uint    `gorm:"index"`                    // FK para Time
-	Proofs        []Proof `gorm:"foreignKey:TransactionID"` // Relacionamento com comprovantes
+	ID          uint           `gorm:"primarykey" json:"id"`
+	Type        int            `gorm:"not null" json:"type"` // 1 - Entrada, 2 - Saída, 3 - Transferência
+	Description string         `gorm:"size:255;not null" json:"description"`
+	Value       float64        `gorm:"not null" json:"value"`
+	CategoryID  uint           `gorm:"not null" json:"category_id"`
+	Category    Category       `gorm:"foreignKey:CategoryID"`
+	Proof       string         `json:"proof,omitempty"`        // Caminho do arquivo
+	FromAccount *uint          `json:"from_account,omitempty"` // Para Transferências
+	ToAccount   *uint          `json:"to_account,omitempty"`   // Para Transferências
+	TeamID      uint           `gorm:"index"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 }
 
 // comprovantes
@@ -175,4 +188,62 @@ func (h *CRUDHandler) Delete(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Registro deletado com sucesso"})
+}
+
+func (h *CRUDHandler) CreateTransaction(c echo.Context) error {
+	// Obter a sessão e o usuário logado
+	session, err := storeSessions.Get(c.Request(), "session-id")
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
+	}
+	user, ok := session.Values["user"].(User)
+	if !ok || user.ID == 0 {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
+	}
+
+	// Criar a instância de Transaction
+	transaction := Transaction{}
+	if err := c.Bind(&transaction); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})
+	}
+
+	// Definir TeamID
+	transaction.TeamID = user.TeamID
+
+	// Tratamento para comprovante (upload de arquivo)
+	file, err := c.FormFile("proof")
+	if err == nil {
+		src, err := file.Open()
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao abrir o arquivo"})
+		}
+		defer src.Close()
+
+		// Criar o diretório do ano/mês
+		year, month, _ := time.Now().Date()
+		dir := fmt.Sprintf("comprovantes/%d/%02d/", year, month)
+		os.MkdirAll(dir, os.ModePerm)
+
+		// Gerar o caminho do arquivo
+		filename := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(file.Filename))
+		dstPath := filepath.Join(dir, filename)
+
+		// Criar o arquivo no servidor
+		dst, err := os.Create(dstPath)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao salvar o arquivo"})
+		}
+		defer dst.Close()
+		io.Copy(dst, src)
+
+		// Salvar o caminho do comprovante
+		transaction.Proof = dstPath
+	}
+
+	// Salvar a transação no banco
+	if err := h.DB.Create(&transaction).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao salvar"})
+	}
+
+	return c.JSON(http.StatusCreated, transaction)
 }
