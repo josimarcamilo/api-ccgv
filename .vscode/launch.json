@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug Go",
+        "type": "go",
+        "request": "launch",
+        "mode": "debug",
+        "program": "${workspaceFolder}/main.go", // Substitua pelo caminho do seu 'main.go'
+        "output": "${workspaceFolder}/debug", // Substitua pelo 'Output directory'
+        "cwd":"${workspaceFolder}",
+        // "envFile": "${workspaceFolder}/ccgv/.env", // Caminho para o arquivo .env na raiz do projeto
+        "args": [
+          // Adicione argumentos do programa aqui, se necessário
+        ]
+      }
+    ]
+  }

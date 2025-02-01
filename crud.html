@@ -1,5 +1,5 @@
 {{define "crud"}}
-{{ template "header.html" }}
+{{ template "header.html" . }}
     <h2>Gerenciamento de <span id="entity-title"></span></h2>
 
     <!-- Formulário de Cadastro/Edição -->
@@ -15,7 +15,7 @@
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
             // Define a entidade a partir da URL (exemplo: crud.html?entity=categorias)
-            const entity = {{.}};
+            const entity = {{.Entity}};
             
             // Carregar configuração do backend
             const configResponse = await fetch(`/crud-config/${entity}`);
@@ -39,27 +39,72 @@
             tableHead.innerHTML += "<th>Ações</th>";
 
             // Criar campos do formulário dinamicamente
-            form.innerHTML = "";
-            config.fields.forEach(field => {
-                if (field.readonly) return;
-                form.innerHTML += `
-                    <label>${field.label}:</label>
-                    <input type="${field.type}" name="${field.name}" ${field.required ? "required" : ""}>
-                `;
-            });
-            form.innerHTML += `<button type="submit">Salvar</button>`;
+// Criar campos do formulário dinamicamente
+form.innerHTML = "";
+for (const field of config.fields) {
+    if (field.readonly) continue;
 
+    let inputField = "";
+
+    if (field.type === "select") {
+        inputField = `<label>${field.label}:</label> <select name="${field.name}" ${field.required ? "required" : ""}></select>`;
+
+        if (field.options) {
+            // Para selects fixos (ex: Tipo)
+            setTimeout(() => {
+                const select = document.querySelector(`[name="${field.name}"]`);
+                field.options.forEach(opt => {
+                    const option = document.createElement("option");
+                    option.value = opt.value;
+                    option.textContent = opt.label;
+                    select.appendChild(option);
+                });
+            }, 0);
+        } else if (field.source) {
+            // Para selects dinâmicos (ex: Categorias, Contas)
+            fetch(field.source)
+                .then(res => res.json())
+                .then(data => {
+                    const select = document.querySelector(`[name="${field.name}"]`);
+                    data.forEach(item => {
+                        const option = document.createElement("option");
+                        option.value = item.id;
+                        option.textContent = item.name;
+                        select.appendChild(option);
+                    });
+                });
+        }
+    } else if (field.type === "file") {
+        inputField = `<label>${field.label}:</label> <input type="file" name="${field.name}">`;
+    } else {
+        inputField = `<label>${field.label}:</label> <input type="${field.type}" name="${field.name}" ${field.required ? "required" : ""}>`;
+    }
+
+    form.innerHTML += inputField;
+}
+
+form.innerHTML += `<button type="submit">Salvar</button>`;
+
+            function getNestedValue(obj, path) {
+                if (!path.includes('.')) return obj[path];
+                return path.split('.').reduce((acc, key) => acc && acc[key], obj);
+            }
             // Carregar Dados da API
             async function loadData() {
+                
                 const response = await fetch(apiUrl);
                 const data = await response.json();
                 tableBody.innerHTML = "";
-                console.log("data", data)
                 data.forEach(item => {
                     const row = document.createElement("tr");
                     config.fields.forEach(field => {
-                        console.log(field)
-                        row.innerHTML += `<td>${item[field.name] || ""}</td>`;
+                        if(field.type == "select" && field.source == undefined){
+                            const option = field.options.filter(opt => opt.value === item.type)[0];
+                            console.log(option)
+                            row.innerHTML += `<td>${option ? option.label : "Desconhecido"}</td>`;
+                        }else{
+                            row.innerHTML += `<td>${getNestedValue(item, field.data) || ""}</td>`;
+                        }
                     });
                     row.innerHTML += `
                         <td>
@@ -76,11 +121,49 @@
                 e.preventDefault();
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
-                console.log('apiUrl', apiUrl)
+                console.log("fromEntries", data)
+                if(config.entity == "transactions"){
+
+                    if (data.type) {
+                        data.type = parseInt(data.type, 10);
+                    }
+
+                    if (data.value) {
+                        data.value = parseFloat(data.value);
+                    }
+
+                    if (data.category_id) {
+                        data.category_id = parseInt(data.category_id, 10);
+                    }
+
+                    if (data.account_id) {
+                        data.account_id = parseInt(data.account_id, 10);
+                    }
+
+                    const proofFile = formData.get("proof");
+                    console.log('arquivo', proofFile)
+                    if (proofFile && proofFile.size > 0) { 
+                        const reader = new FileReader();
+                        reader.readAsDataURL(proofFile);
+                        reader.onload = function () {
+                            data.proof = reader.result; // Base64 do arquivo
+                        };
+                    } else {
+                        delete data.proof; // Remove se estiver vazio
+                    }
+                }
+
+
+                // await fetch(apiUrl, {
+                //     method: "POST",
+                //     headers: { "Content-Type": "application/json" },
+                //     body: JSON.stringify(data),
+                // });
+
                 await fetch(apiUrl, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data),
+                    // headers: { "Content-Type": "application/json" },
+                    body: formData,
                 });
 
                 form.reset();

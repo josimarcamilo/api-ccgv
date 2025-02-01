@@ -1,5 +1,10 @@
 {{define "home"}}
-{{ template "header.html" }}
-<h2>Área logada</h2>
+{{ template "header.html" . }}
+<div class="col">
+    <h1>Home</h1>
+    <pre>{{ printf "%#v" . }}</pre>
+    <pre>{{if eq .CurrentRoute "/home"}} active {{end}}</pre>
+    <pre>{{if eq .CurrentRoute "/home"}}active{{else}}link-body-emphasis{{end}}</pre>
+</div>
 {{ template "footer.html" }}
 {{end}}
