@@ -40,7 +40,7 @@ type Category struct {
 
 type Account struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
-	Name      string         `gorm:"size:255;not null" json:"name"`
+	Name      string         `gorm:"size:255;not null" json:"name" form:"name"`
 	Balance   float32        `gorm:"not null;default:0" json:"balance,string"`
 	TeamID    uint           `gorm:"index"` // FK para Time
 	CreatedAt time.Time      `json:"created_at"`

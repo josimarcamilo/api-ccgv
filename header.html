@@ -9,7 +9,7 @@
   </head>
   <body>
     <div class="row">
-      <div class="col">
+      <div class="col-sm-3">
         <main class="d-flex flex-nowrap">
           <div class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary" style="width: 280px; height: 100vh;">
             <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
@@ -31,21 +31,15 @@
                 </a>
               </li>
               <li>
-                <a href="#" class="nav-link link-body-emphasis">
+                <a href="/crud/accounts" class="nav-link {{if eq .CurrentRoute "/crud/accounts"}}active{{else}}link-body-emphasis{{end}}">
                   <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
-                  Orders
+                  Contas
                 </a>
               </li>
               <li>
-                <a href="#" class="nav-link link-body-emphasis">
+                <a href="/crud/transactions" class="nav-link {{if eq .CurrentRoute "/crud/transactions"}}active{{else}}link-body-emphasis{{end}}">
                   <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
-                  Products
-                </a>
-              </li>
-              <li>
-                <a href="#" class="nav-link link-body-emphasis">
-                  <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#people-circle"/></svg>
-                  Customers
+                  Transações
                 </a>
               </li>
             </ul>

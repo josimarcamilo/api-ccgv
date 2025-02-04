@@ -1,12 +1,13 @@
 {{define "crud"}}
 {{ template "header.html" . }}
-    <h2>Gerenciamento de <span id="entity-title"></span></h2>
+<div class="col">
+    <h2 class="mt-3">Gerenciamento de <span id="entity-title"></span></h2>
 
     <!-- Formulário de Cadastro/Edição -->
-    <form id="crud-form"></form>
+    <form class="mt-3" id="crud-form"></form>
 
     <!-- Tabela de Listagem -->
-    <table id="data-table" border="1" width="100%">
+    <table class="mt-3" id="data-table" border="1" width="100%">
         <thead>
             <tr></tr>
         </thead>
@@ -193,5 +194,6 @@ form.innerHTML += `<button type="submit">Salvar</button>`;
             loadData();
         });
     </script>
+</div>
 {{ template "footer.html" }}
 {{end}}

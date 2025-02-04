@@ -204,6 +204,11 @@ func (h *CRUDHandler) CreateCategory(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})
 	}
 
+	// Validações simples
+	if model.Name == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "O nome da conta é obrigatório"})
+	}
+
 	// Definir TeamID
 	model.TeamID = user.TeamID
 
@@ -230,6 +235,60 @@ func (h *CRUDHandler) ListCategories(c echo.Context) error {
 
 	// Criar um slice
 	var records []models.Category
+
+	// Buscar apenas as transactions do TeamID do usuário logado
+	if err := h.DB.Where("team_id = ?", user.TeamID).
+		Order("id DESC").
+		Find(&records).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao buscar registros"})
+	}
+
+	return c.JSON(http.StatusOK, records)
+}
+
+func (h *CRUDHandler) CreateAccount(c echo.Context) error {
+	// Obter a sessão e o usuário logado
+	session, err := storeSessions.Get(c.Request(), "session-id")
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
+	}
+	user, ok := session.Values["user"].(models.User)
+	if !ok || user.ID == 0 {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
+	}
+
+	// Criar a instância de Transaction
+	model := models.Account{}
+	if err := c.Bind(&model); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})
+	}
+
+	// Definir TeamID
+	model.TeamID = user.TeamID
+
+	// Salvar o registro no banco
+	if err := h.DB.Create(&model).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao salvar"})
+	}
+
+	return c.JSON(http.StatusCreated, model)
+}
+
+// Listar transactions do usuário logado
+func (h *CRUDHandler) ListAccounts(c echo.Context) error {
+	// Obter a sessão e o usuário logado
+	session, err := storeSessions.Get(c.Request(), "session-id")
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
+	}
+
+	user, ok := session.Values["user"].(models.User)
+	if !ok || user.ID == 0 {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
+	}
+
+	// Criar um slice
+	var records []models.Account
 
 	// Buscar apenas as transactions do TeamID do usuário logado
 	if err := h.DB.Where("team_id = ?", user.TeamID).

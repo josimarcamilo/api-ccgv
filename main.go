@@ -342,8 +342,8 @@ func main() {
 	e.PUT("/categories/:id", categoryHandler.Update)
 	e.DELETE("/categories/:id", categoryHandler.Delete)
 
-	e.POST("/accounts", accountHandler.Create)
-	e.GET("/accounts", accountHandler.List)
+	e.POST("/accounts", accountHandler.CreateAccount)
+	e.GET("/accounts", accountHandler.ListAccounts)
 	e.GET("/accounts/:id", accountHandler.GetByID)
 	e.PUT("/accounts/:id", accountHandler.Update)
 	e.DELETE("/accounts/:id", accountHandler.Delete)
@@ -375,9 +375,9 @@ func GetCrudConfig(c echo.Context) error {
 			"title":  "Contas Contábeis",
 			"apiUrl": "http://localhost:8000/accounts",
 			"fields": []map[string]interface{}{
-				{"name": "id", "label": "ID", "type": "number", "readonly": true},
-				{"name": "name", "label": "Nome", "type": "text", "required": true},
-				{"name": "balance", "label": "Saldo", "type": "text", "readonly": true},
+				{"name": "id", "label": "ID", "data": "id", "type": "number", "readonly": true},
+				{"name": "name", "label": "Nome", "data": "name", "type": "text", "required": true},
+				{"name": "balance", "label": "Saldo", "data": "balance", "type": "text", "readonly": true},
 			},
 		},
 		"transactions": map[string]interface{}{
