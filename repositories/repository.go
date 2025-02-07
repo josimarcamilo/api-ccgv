@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -348,7 +349,7 @@ func (h *CRUDHandler) CreateTransaction(c echo.Context) error {
 		io.Copy(dst, src)
 
 		// Salvar o caminho do comprovante
-		transaction.Proof = dstPath
+		transaction.Proof = &dstPath
 	}
 
 	// Salvar a transação no banco
@@ -359,7 +360,6 @@ func (h *CRUDHandler) CreateTransaction(c echo.Context) error {
 	return c.JSON(http.StatusCreated, transaction)
 }
 
-// Listar transactions do usuário logado
 func (h *CRUDHandler) ListTransactions(c echo.Context) error {
 	// Obter a sessão e o usuário logado
 	session, err := storeSessions.Get(c.Request(), "session-id")
@@ -372,18 +372,143 @@ func (h *CRUDHandler) ListTransactions(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
 	}
 
-	// Criar um slice de transactions
-	var transactions []models.Transaction
+	// Parâmetros do DataTables
+	start, _ := strconv.Atoi(c.QueryParam("start"))
+	length, _ := strconv.Atoi(c.QueryParam("length"))
+	search := c.QueryParam("search[value]")
+	orderColumn := c.QueryParam("order[0][column]") // Índice da coluna
+	orderDir := c.QueryParam("order[0][dir]")       // Direção (asc ou desc)
 
-	// Buscar apenas as transactions do TeamID do usuário logado
-	if err := h.DB.
+	// Definir ordenação padrão
+	orderBy := "date DESC"
+	if orderColumn != "" && orderDir != "" {
+		columns := []string{"id", "date", "amount", "category_id", "account_id"} // Defina as colunas do DataTables
+		colIndex, err := strconv.Atoi(orderColumn)
+		if err == nil && colIndex >= 0 && colIndex < len(columns) {
+			orderBy = columns[colIndex] + " " + orderDir
+		}
+	}
+
+	// Criar a query inicial
+	query := h.DB.
 		Preload("Category").
-		Preload("Account").Where("team_id = ?", user.TeamID).
-		Order("date DESC").
-		Limit(100).
-		Find(&transactions).Error; err != nil {
+		Preload("Account").
+		Where("team_id = ?", user.TeamID)
+
+	// Aplicar filtro de pesquisa
+	if search != "" {
+		query = query.Where("description LIKE ? OR amount::text LIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	// Aplicar paginação e ordenação
+	var transactions []models.Transaction
+	if err := query.Order(orderBy).Offset(start).Limit(length).Find(&transactions).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao buscar registros"})
 	}
 
-	return c.JSON(http.StatusOK, transactions)
+	// Contar total de registros sem filtros
+	var totalRecords int64
+	h.DB.Model(&models.Transaction{}).Where("team_id = ?", user.TeamID).Count(&totalRecords)
+
+	// Contar total de registros filtrados
+	totalFiltered := totalRecords
+
+	// Retornar resposta no formato esperado pelo DataTables
+	response := map[string]interface{}{
+		"draw":            c.QueryParam("draw"),
+		"recordsTotal":    totalRecords,
+		"recordsFiltered": totalFiltered,
+		"data":            transactions,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *CRUDHandler) ListUsers(c echo.Context) error {
+	// Obter a sessão e o usuário logado
+	session, err := storeSessions.Get(c.Request(), "session-id")
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
+	}
+
+	user, ok := session.Values["user"].(models.User)
+	if !ok || user.ID == 0 {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
+	}
+
+	// Parâmetros do DataTables
+	start, _ := strconv.Atoi(c.QueryParam("start"))
+	length, _ := strconv.Atoi(c.QueryParam("length"))
+	search := c.QueryParam("search[value]")
+	// orderColumn := c.QueryParam("order[0][column]") // Índice da coluna
+	// orderDir := c.QueryParam("order[0][dir]")       // Direção (asc ou desc)
+
+	// Definir ordenação padrão
+	orderBy := "id DESC"
+
+	// Criar a query inicial
+	query := h.DB.
+		Where("team_id = ?", user.TeamID)
+
+	// Aplicar filtro de pesquisa
+	if search != "" {
+		// query = query.Where("description LIKE ? OR amount::text LIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	// Aplicar paginação e ordenação
+	var transactions []models.User
+	if err := query.Order(orderBy).Offset(start).Limit(length).Find(&transactions).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao buscar registros",
+			"message": err.Error(),
+		})
+	}
+
+	// Contar total de registros sem filtros
+	var totalRecords int64
+	h.DB.Model(&models.User{}).Where("team_id = ?", user.TeamID).Count(&totalRecords)
+
+	// Contar total de registros filtrados
+	totalFiltered := totalRecords
+
+	// Retornar resposta no formato esperado pelo DataTables
+	response := map[string]interface{}{
+		"draw":            c.QueryParam("draw"),
+		"recordsTotal":    totalRecords,
+		"recordsFiltered": totalFiltered,
+		"data":            transactions,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *CRUDHandler) CreateUser(c echo.Context) error {
+	// Obter a sessão e o usuário logado
+	session, err := storeSessions.Get(c.Request(), "session-id")
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
+	}
+	user, ok := session.Values["user"].(models.User)
+	if !ok || user.ID == 0 {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
+	}
+
+	// Criar a instância de Transaction
+	model := models.User{}
+	if err := c.Bind(&model); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})
+	}
+
+	// Definir TeamID
+	model.TeamID = user.TeamID
+
+	// Salvar a transação no banco
+	if err := h.DB.Create(&model).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao salvar",
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusCreated, model)
 }

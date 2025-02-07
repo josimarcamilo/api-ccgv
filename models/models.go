@@ -49,9 +49,8 @@ type Account struct {
 }
 
 type Transaction struct {
-	ID     uint `gorm:"primarykey" json:"id"`
-	TeamID uint `gorm:"index;index:idx_date_team"`
-	// DateAt      CustomTime     `gorm:"type:date" json:"date_at"`
+	ID          uint           `gorm:"primarykey" json:"id"`
+	TeamID      uint           `gorm:"index;index:idx_date_team"`
 	Date        string         `gorm:"type:date;index:idx_date_team" json:"date_at" form:"date_at"`
 	Type        int            `gorm:"not null" json:"type" form:"type"` // 1 - Entrada, 2 - Saída, 3 - Transferência
 	Description string         `gorm:"size:255;not null" json:"description" form:"description"`
@@ -60,7 +59,7 @@ type Transaction struct {
 	Category    Category       `gorm:"foreignKey:CategoryID" json:"category"`
 	AccountID   uint           `gorm:"not null" json:"account_id" form:"account_id"`
 	Account     Account        `gorm:"foreignKey:AccountID" json:"account"`
-	Proof       string         `json:"proof,omitempty" form:"proof,omitempty"` // Caminho do arquivo
+	Proof       *string        `json:"proof" form:"proof"` // Caminho do arquivo
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at"`

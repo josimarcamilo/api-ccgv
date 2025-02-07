@@ -218,48 +218,6 @@ func main() {
 	})
 
 	e.GET("/users/create", UserCreate)
-	e.POST("/users", func(c echo.Context) error {
-		// Obter a sessão
-		session, err := storeSessions.Get(c.Request(), "session-id")
-		if err != nil {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
-		}
-
-		// Obter o userID da sessão
-		user, ok := session.Values["user"].(models.User)
-		if !ok || user.ID == 0 {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
-		}
-
-		var requestBody models.User
-
-		if err := c.Bind(&requestBody); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})
-		}
-
-		if requestBody.Name == "" {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "O nome é obrigatório"})
-		}
-
-		if requestBody.Email == "" {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "O email é obrigatório"})
-		}
-
-		if requestBody.Password == "" {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "A senha é obrigatório"})
-		}
-
-		requestBody.TeamID = user.TeamID
-
-		if err := db.Create(&requestBody).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao criar o registro"})
-		}
-
-		return c.JSON(http.StatusCreated, map[string]interface{}{
-			"message":  "Registro criado com sucesso",
-			"registro": requestBody,
-		})
-	})
 
 	// e.GET("/accounts/create", AccountCreate)
 	// // e.GET("/accounts/list", AccountList)
@@ -348,11 +306,19 @@ func main() {
 	e.PUT("/accounts/:id", accountHandler.Update)
 	e.DELETE("/accounts/:id", accountHandler.Delete)
 
+	e.GET("/transactions/list", ListTransactions)
 	e.POST("/transactions", transactionHandler.CreateTransaction)
 	e.GET("/transactions", transactionHandler.ListTransactions)
 	e.GET("/transactions/:id", transactionHandler.GetByID)
 	e.PUT("/transactions/:id", transactionHandler.Update)
 	e.DELETE("/transactions/:id", transactionHandler.Delete)
+
+	e.GET("/users/table", ListUsers)
+	e.POST("/users", userHandler.CreateUser)
+	e.GET("/users", userHandler.ListUsers)
+	// e.GET("/transactions/:id", userHandler.GetByID)
+	// e.PUT("/transactions/:id", userHandler.Update)
+	// e.DELETE("/transactions/:id", userHandler.Delete)
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
@@ -361,6 +327,15 @@ func GetCrudConfig(c echo.Context) error {
 	entity := c.Param("entity")
 
 	configs := map[string]interface{}{
+		"users": map[string]interface{}{
+			"entity": "users",
+			"title":  "Usuários",
+			"apiUrl": "http://localhost:8000/users",
+			"fields": []map[string]interface{}{
+				{"name": "name", "label": "Nome", "data": "name", "type": "text", "required": true},
+				{"name": "email", "label": "E-mail", "data": "email", "type": "mail", "required": true},
+			},
+		},
 		"categories": map[string]interface{}{
 			"entity": "categories",
 			"title":  "Categorias",
@@ -411,6 +386,20 @@ func Crud(c echo.Context) error {
 	return c.Render(http.StatusOK, "crud", map[string]interface{}{
 		"Entity":       entity,
 		"CurrentRoute": "/crud/" + entity,
+	})
+}
+
+func ListTransactions(c echo.Context) error {
+	return c.Render(http.StatusOK, "transactions", map[string]interface{}{
+		"Entity":       "transactions",
+		"CurrentRoute": "/crud/transactions",
+	})
+}
+
+func ListUsers(c echo.Context) error {
+	return c.Render(http.StatusOK, "users", map[string]interface{}{
+		"Entity":       "users",
+		"CurrentRoute": "/users/table",
 	})
 }
 

@@ -1,102 +1,76 @@
-{{define "crud"}}
+{{define "users"}}
 {{ template "header.html" . }}
 <div class="col">
-    <h2 class="mt-3">Gerenciamento de <span id="entity-title"></span></h2>
+    <h2 class="mt-3">Cadastrar usuário</h2>
 
     <!-- Formulário de Cadastro/Edição -->
-    <form class="mt-3" id="crud-form"></form>
+    <div class="row">
+        <form id="crud-form" class="row g-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="inputName" class="form-label">Nome</label>
+                    <input type="text" name="name" class="form-control" id="inputName" required>
+                  </div>
+                <div class="col-md-6">
+                  <label for="inputEmail4" class="form-label">Email</label>
+                  <input type="email" name="email" class="form-control" id="inputEmail4" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                  <label for="inputPassword4" class="form-label">Password</label>
+                  <input type="password" name="password" class="form-control" id="inputPassword4" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                  <button type="submit" class="btn btn-primary">Cadastrar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <h2 class="mt-3">Usuários</h2>
 
     <!-- Tabela de Listagem -->
     <table class="mt-3" id="data-table" width="100%">
         <thead>
-            <tr></tr>
+            <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+            </tr>
         </thead>
-        <tbody></tbody>
+        <tfoot>
+            <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+            </tr>
+        </tfoot>
     </table>
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
             
-            // Define a entidade a partir da URL (exemplo: crud.html?entity=categorias)
-            const entity = {{.Entity}};
-            
             // Carregar configuração do backend
-            const configResponse = await fetch(`/crud-config/${entity}`);
+            const configResponse = await fetch(`/crud-config/users`);
             const config = await configResponse.json();
 
             document.title = `Gerenciamento de ${config.title}`;
-            document.getElementById("entity-title").innerText = config.title;
 
             const apiUrl = config.apiUrl;
             const tableHead = document.querySelector("#data-table thead tr");
             const tableBody = document.querySelector("#data-table tbody");
             const form = document.getElementById("crud-form");
-
-            // Criar cabeçalho da tabela
-            tableHead.innerHTML = "";
-            config.fields.forEach(field => {
-                const th = document.createElement("th");
-                th.innerText = field.label;
-                tableHead.appendChild(th);
-            });
-            tableHead.innerHTML += "<th>Ações</th>";
-
-            new DataTable('#data-table', {
+            
+            var table = new DataTable('#data-table', {
                 ajax: apiUrl,
                 processing: true,
-                serverSide: true
+                serverSide: true,
+                columns: [
+                    {"data": "name"},
+                    {"data": "email"},
+                ]
             });
 
-            // Criar campos do formulário dinamicamente
-            // Criar campos do formulário dinamicamente
-            form.innerHTML = "";
-            for (const field of config.fields) {
-                if (field.readonly) continue;
-
-                let inputField = "";
-
-                if (field.type === "select") {
-                    inputField = `<label>${field.label}:</label> <select name="${field.name}" ${field.required ? "required" : ""}></select>`;
-
-                    if (field.options) {
-                        // Para selects fixos (ex: Tipo)
-                        setTimeout(() => {
-                            const select = document.querySelector(`[name="${field.name}"]`);
-                            field.options.forEach(opt => {
-                                const option = document.createElement("option");
-                                option.value = opt.value;
-                                option.textContent = opt.label;
-                                select.appendChild(option);
-                            });
-                        }, 0);
-                    } else if (field.source) {
-                        // Para selects dinâmicos (ex: Categorias, Contas)
-                        fetch(field.source)
-                            .then(res => res.json())
-                            .then(data => {
-                                const select = document.querySelector(`[name="${field.name}"]`);
-                                data.forEach(item => {
-                                    const option = document.createElement("option");
-                                    option.value = item.id;
-                                    option.textContent = item.name;
-                                    select.appendChild(option);
-                                });
-                            });
-                    }
-                } else if (field.type === "file") {
-                    inputField = `<label>${field.label}:</label> <input type="file" name="${field.name}">`;
-                } else {
-                    inputField = `<label>${field.label}:</label> <input type="${field.type}" name="${field.name}" ${field.required ? "required" : ""}>`;
-                }
-
-                form.innerHTML += inputField;
-            }
-
-            form.innerHTML += `<button type="submit">Salvar</button>`;
-
-            function getNestedValue(obj, path) {
-                if (!path.includes('.')) return obj[path];
-                return path.split('.').reduce((acc, key) => acc && acc[key], obj);
-            }
             
             // Carregar Dados da API
             async function loadData() {
@@ -176,7 +150,7 @@
                 });
 
                 form.reset();
-                loadData();
+                table.draw()
             });
 
             // Deletar Registro
