@@ -290,12 +290,6 @@ func main() {
 	e.PUT("/categories/:id", categoryHandler.Update)
 	e.DELETE("/categories/:id", categoryHandler.Delete)
 
-	e.POST("/accounts", accountHandler.CreateAccount)
-	e.GET("/accounts", accountHandler.ListAccounts)
-	e.GET("/accounts/:id", accountHandler.GetByID)
-	e.PUT("/accounts/:id", accountHandler.Update)
-	e.DELETE("/accounts/:id", accountHandler.Delete)
-
 	e.GET("/transactions/list", ListTransactions)
 	e.POST("/transactions", transactionHandler.CreateTransaction)
 	e.GET("/transactions", transactionHandler.ListTransactions)
@@ -311,6 +305,14 @@ func main() {
 	// e.DELETE("/users/:id", userHandler.Delete)
 
 	e.GET("/categories/table", ListCategories)
+
+	// contas
+	e.GET("/accounts/table", ListAccounts)
+	e.POST("/accounts", accountHandler.CreateAccount)
+	e.GET("/accounts", accountHandler.ListAccounts)
+	e.GET("/accounts/:id", accountHandler.GetByID)
+	e.PUT("/accounts/:id", accountHandler.Update)
+	e.DELETE("/accounts/:id", accountHandler.Delete)
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
@@ -399,6 +401,13 @@ func ListCategories(c echo.Context) error {
 	return c.Render(http.StatusOK, "categories", map[string]interface{}{
 		"Entity":       "categories",
 		"CurrentRoute": "/categories/table",
+	})
+}
+
+func ListAccounts(c echo.Context) error {
+	return c.Render(http.StatusOK, "accounts", map[string]interface{}{
+		"Entity":       "accounts",
+		"CurrentRoute": "/accounts/table",
 	})
 }
 
