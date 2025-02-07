@@ -1,13 +1,10 @@
 {{define "transactions"}}
 {{ template "header.html" . }}
-<div class="col">
-    <h2 class="mt-3">Gerenciamento de <span id="entity-title"></span></h2>
-
-    <!-- Formulário de Cadastro/Edição -->
-    <form class="mt-3" id="crud-form"></form>
+<div class="col-sm-9">
+    <h3 class="mt-3">Transações registradas</h3>
 
     <!-- Tabela de Listagem -->
-    <table class="mt-3" id="data-table" width="100%">
+    <table class="mt-3" id="data-table" width="90%">
         <thead>
             <tr>
                 <th>Id</th>
@@ -35,32 +32,12 @@
     </table>
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            
-            // Define a entidade a partir da URL (exemplo: crud.html?entity=categorias)
-            const entity = {{.Entity}};
-            
-            // Carregar configuração do backend
-            const configResponse = await fetch(`/crud-config/${entity}`);
+            const configResponse = await fetch(`/crud-config/transactions`);
             const config = await configResponse.json();
 
-            document.title = `Gerenciamento de ${config.title}`;
-            document.getElementById("entity-title").innerText = config.title;
-
             const apiUrl = config.apiUrl;
-            const tableHead = document.querySelector("#data-table thead tr");
-            const tableBody = document.querySelector("#data-table tbody");
-            const form = document.getElementById("crud-form");
 
-            // Criar cabeçalho da tabela
-            // tableHead.innerHTML = "";
-            // config.fields.forEach(field => {
-            //     const th = document.createElement("th");
-            //     th.innerText = field.label;
-            //     tableHead.appendChild(th);
-            // });
-            // tableHead.innerHTML += "<th>Ações</th>";
-
-            new DataTable('#data-table', {
+            var table = new DataTable('#data-table', {
                 ajax: apiUrl,
                 processing: true,
                 serverSide: true,
@@ -77,86 +54,9 @@
             });
 
             
-            // Carregar Dados da API
             async function loadData() {
-                
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                tableBody.innerHTML = "";
-                data.forEach(item => {
-                    const row = document.createElement("tr");
-                    config.fields.forEach(field => {
-                        if(field.type == "select" && field.source == undefined){
-                            const option = field.options.filter(opt => opt.value === item.type)[0];
-                            console.log(option)
-                            row.innerHTML += `<td>${option ? option.label : "Desconhecido"}</td>`;
-                        }else{
-                            row.innerHTML += `<td>${getNestedValue(item, field.data) || ""}</td>`;
-                        }
-                    });
-                    row.innerHTML += `
-                        <td>
-                            <button onclick="editItem(${item.id})">✏️ Editar</button>
-                            <button onclick="deleteItem(${item.id})">🗑️ Deletar</button>
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
+                table.draw()
             }
-
-            // Criar Novo Registro
-            form.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-                console.log("fromEntries", data)
-                if(config.entity == "transactions"){
-
-                    if (data.type) {
-                        data.type = parseInt(data.type, 10);
-                    }
-
-                    if (data.value) {
-                        data.value = parseFloat(data.value);
-                    }
-
-                    if (data.category_id) {
-                        data.category_id = parseInt(data.category_id, 10);
-                    }
-
-                    if (data.account_id) {
-                        data.account_id = parseInt(data.account_id, 10);
-                    }
-
-                    const proofFile = formData.get("proof");
-                    console.log('arquivo', proofFile)
-                    if (proofFile && proofFile.size > 0) { 
-                        const reader = new FileReader();
-                        reader.readAsDataURL(proofFile);
-                        reader.onload = function () {
-                            data.proof = reader.result; // Base64 do arquivo
-                        };
-                    } else {
-                        delete data.proof; // Remove se estiver vazio
-                    }
-                }
-
-
-                // await fetch(apiUrl, {
-                //     method: "POST",
-                //     headers: { "Content-Type": "application/json" },
-                //     body: JSON.stringify(data),
-                // });
-
-                await fetch(apiUrl, {
-                    method: "POST",
-                    // headers: { "Content-Type": "application/json" },
-                    body: formData,
-                });
-
-                form.reset();
-                loadData();
-            });
 
             // Deletar Registro
             window.deleteItem = async (id) => {
@@ -176,9 +76,6 @@
                     }
                 });
             };
-
-            // Carregar dados ao iniciar
-            // loadData();
         });
     </script>
 </div>

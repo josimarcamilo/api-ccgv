@@ -290,13 +290,6 @@ func main() {
 	e.PUT("/categories/:id", categoryHandler.Update)
 	e.DELETE("/categories/:id", categoryHandler.Delete)
 
-	e.GET("/transactions/list", ListTransactions)
-	e.POST("/transactions", transactionHandler.CreateTransaction)
-	e.GET("/transactions", transactionHandler.ListTransactions)
-	e.GET("/transactions/:id", transactionHandler.GetByID)
-	e.PUT("/transactions/:id", transactionHandler.Update)
-	e.DELETE("/transactions/:id", transactionHandler.Delete)
-
 	e.GET("/users/table", ListUsers)
 	e.POST("/users", userHandler.CreateUser)
 	e.GET("/users", userHandler.ListUsers)
@@ -313,6 +306,13 @@ func main() {
 	e.GET("/accounts/:id", accountHandler.GetByID)
 	e.PUT("/accounts/:id", accountHandler.Update)
 	e.DELETE("/accounts/:id", accountHandler.Delete)
+
+	e.GET("/transactions/table", ListTransactions)
+	e.POST("/transactions", transactionHandler.CreateTransaction)
+	e.GET("/transactions", transactionHandler.ListTransactions)
+	e.GET("/transactions/:id", transactionHandler.GetByID)
+	e.PUT("/transactions/:id", transactionHandler.Update)
+	e.DELETE("/transactions/:id", transactionHandler.Delete)
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
@@ -353,6 +353,11 @@ func GetCrudConfig(c echo.Context) error {
 			"entity": "transactions",
 			"title":  "Transações",
 			"apiUrl": "http://localhost:8000/transactions",
+			"transaction_types": []map[string]interface{}{
+				{"value": 1, "label": "Entrada"},
+				{"value": 2, "label": "Saída"},
+				{"value": 3, "label": "Transferência"},
+			},
 			"fields": []map[string]interface{}{
 				{"name": "id", "label": "ID", "data": "id", "type": "number", "readonly": true},
 				{"name": "date_at", "label": "Data", "data": "date_at", "type": "date", "required": true},
@@ -386,7 +391,7 @@ func Crud(c echo.Context) error {
 func ListTransactions(c echo.Context) error {
 	return c.Render(http.StatusOK, "transactions", map[string]interface{}{
 		"Entity":       "transactions",
-		"CurrentRoute": "/crud/transactions",
+		"CurrentRoute": "/transactions/table",
 	})
 }
 
