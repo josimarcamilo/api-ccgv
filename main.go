@@ -82,14 +82,6 @@ func main() {
 
 	e.GET("/home", Home)
 
-	e.GET("/users", func(c echo.Context) error {
-		var users []models.User
-		if err := db.Find(&users).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao buscar usuários"})
-		}
-		return c.JSON(http.StatusOK, users)
-	})
-
 	e.POST("/login", func(c echo.Context) error {
 		type LoginRequest struct {
 			Email    string `json:"email" form:"email"`
@@ -217,8 +209,6 @@ func main() {
 		})
 	})
 
-	e.GET("/users/create", UserCreate)
-
 	// e.GET("/accounts/create", AccountCreate)
 	// // e.GET("/accounts/list", AccountList)
 
@@ -316,9 +306,11 @@ func main() {
 	e.GET("/users/table", ListUsers)
 	e.POST("/users", userHandler.CreateUser)
 	e.GET("/users", userHandler.ListUsers)
-	// e.GET("/transactions/:id", userHandler.GetByID)
-	// e.PUT("/transactions/:id", userHandler.Update)
-	// e.DELETE("/transactions/:id", userHandler.Delete)
+	// e.GET("/users/:id", userHandler.GetByID)
+	// e.PUT("/users/:id", userHandler.Update)
+	// e.DELETE("/users/:id", userHandler.Delete)
+
+	e.GET("/categories/table", ListCategories)
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
@@ -403,6 +395,13 @@ func ListUsers(c echo.Context) error {
 	})
 }
 
+func ListCategories(c echo.Context) error {
+	return c.Render(http.StatusOK, "categories", map[string]interface{}{
+		"Entity":       "categories",
+		"CurrentRoute": "/categories/table",
+	})
+}
+
 func Hello(c echo.Context) error {
 	return c.Render(http.StatusOK, "hello", "World")
 }
@@ -424,10 +423,6 @@ func Register(c echo.Context) error {
 
 func AccountCreate(c echo.Context) error {
 	return c.Render(http.StatusOK, "account", "World")
-}
-
-func UserCreate(c echo.Context) error {
-	return c.Render(http.StatusOK, "user-create", "World")
 }
 
 func TeamCreate(c echo.Context) error {

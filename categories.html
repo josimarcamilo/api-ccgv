@@ -1,0 +1,104 @@
+{{define "categories"}}
+{{ template "header.html" . }}
+<div class="col">
+    <h3 class="mt-3">Cadastrar categoria</h3>
+
+    <!-- Formulário de Cadastro/Edição -->
+    <div class="row">
+        <form id="crud-form" class="row g-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="inputName" class="form-label">Nome</label>
+                    <input type="text" name="name" class="form-control" id="inputName" required>
+                  </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                  <button type="submit" class="btn btn-primary">Cadastrar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <h3 class="mt-3">Categorias</h3>
+
+    <!-- Tabela de Listagem -->
+    <table class="mt-3" id="data-table" width="90%">
+        <thead>
+            <tr>
+                <th>Nome</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th>Nome</th>
+            </tr>
+        </tfoot>
+    </table>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            
+            // Carregar configuração do backend
+            const configResponse = await fetch(`/crud-config/categories`);
+            const config = await configResponse.json();
+
+            document.title = `Gerenciamento de ${config.title}`;
+
+            const apiUrl = config.apiUrl;
+            const form = document.getElementById("crud-form");
+            
+            var table = new DataTable('#data-table', {
+                ajax: apiUrl,
+                processing: true,
+                serverSide: true,
+                columns: [
+                    {"data": "name"},
+                ]
+            });
+
+            
+            // Carregar Dados da API
+            async function loadData() {
+                table.draw()
+            }
+
+            // Criar Novo Registro
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                console.log("form", data)
+                console.log("apiUrl", apiUrl)
+                
+                await fetch(apiUrl, {
+                    method: "POST",
+                    body: formData,
+                });
+
+                form.reset();
+                loadData();
+            });
+
+            // Deletar Registro
+            window.deleteItem = async (id) => {
+                if (confirm("Tem certeza que deseja excluir este item?")) {
+                    await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+                    loadData();
+                }
+            };
+
+            // Editar Registro
+            window.editItem = async (id) => {
+                const response = await fetch(`${apiUrl}/${id}`);
+                const data = await response.json();
+                config.fields.forEach(field => {
+                    if (!field.readonly) {
+                        document.querySelector(`[name="${field.name}"]`).value = data[field.name] || "";
+                    }
+                });
+            };
+        });
+    </script>
+</div>
+{{ template "footer.html" }}
+{{end}}

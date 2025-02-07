@@ -221,7 +221,6 @@ func (h *CRUDHandler) CreateCategory(c echo.Context) error {
 	return c.JSON(http.StatusCreated, model)
 }
 
-// Listar transactions do usuário logado
 func (h *CRUDHandler) ListCategories(c echo.Context) error {
 	// Obter a sessão e o usuário logado
 	session, err := storeSessions.Get(c.Request(), "session-id")
@@ -234,17 +233,50 @@ func (h *CRUDHandler) ListCategories(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
 	}
 
-	// Criar um slice
-	var records []models.Category
+	// Parâmetros do DataTables
+	start, _ := strconv.Atoi(c.QueryParam("start"))
+	length, _ := strconv.Atoi(c.QueryParam("length"))
+	search := c.QueryParam("search[value]")
+	// orderColumn := c.QueryParam("order[0][column]") // Índice da coluna
+	// orderDir := c.QueryParam("order[0][dir]")       // Direção (asc ou desc)
 
-	// Buscar apenas as transactions do TeamID do usuário logado
-	if err := h.DB.Where("team_id = ?", user.TeamID).
-		Order("id DESC").
-		Find(&records).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao buscar registros"})
+	// Definir ordenação padrão
+	orderBy := "id DESC"
+
+	// Criar a query inicial
+	query := h.DB.
+		Where("team_id = ?", user.TeamID)
+
+	// Aplicar filtro de pesquisa
+	if search != "" {
+		// query = query.Where("description LIKE ? OR amount::text LIKE ?", "%"+search+"%", "%"+search+"%")
 	}
 
-	return c.JSON(http.StatusOK, records)
+	// Aplicar paginação e ordenação
+	var records []models.Category
+	if err := query.Order(orderBy).Offset(start).Limit(length).Find(&records).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao buscar registros",
+			"message": err.Error(),
+		})
+	}
+
+	// Contar total de registros sem filtros
+	var totalRecords int64
+	h.DB.Model(&models.User{}).Where("team_id = ?", user.TeamID).Count(&totalRecords)
+
+	// Contar total de registros filtrados
+	totalFiltered := totalRecords
+
+	// Retornar resposta no formato esperado pelo DataTables
+	response := map[string]interface{}{
+		"draw":            c.QueryParam("draw"),
+		"recordsTotal":    totalRecords,
+		"recordsFiltered": totalFiltered,
+		"data":            records,
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
 
 func (h *CRUDHandler) CreateAccount(c echo.Context) error {
