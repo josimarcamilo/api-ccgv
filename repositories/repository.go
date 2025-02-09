@@ -232,6 +232,18 @@ func (h *CRUDHandler) ListCategories(c echo.Context) error {
 	if !ok || user.ID == 0 {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
 	}
+	toSelect := c.QueryParam("toselect")
+	if toSelect != "" {
+		var records []models.Category
+		if err := h.DB.
+			Where("team_id = ?", user.TeamID).Order("id ASC").Find(&records).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error":   "Erro ao buscar registros para select",
+				"message": err.Error(),
+			})
+		}
+		return c.JSON(http.StatusOK, records)
+	}
 
 	// Parâmetros do DataTables
 	start, _ := strconv.Atoi(c.QueryParam("start"))
@@ -289,6 +301,19 @@ func (h *CRUDHandler) ListAccounts(c echo.Context) error {
 	user, ok := session.Values["user"].(models.User)
 	if !ok || user.ID == 0 {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
+	}
+
+	toSelect := c.QueryParam("toselect")
+	if toSelect != "" {
+		var records []models.Account
+		if err := h.DB.
+			Where("team_id = ?", user.TeamID).Order("name ASC").Find(&records).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error":   "Erro ao buscar registros para select",
+				"message": err.Error(),
+			})
+		}
+		return c.JSON(http.StatusOK, records)
 	}
 
 	// Parâmetros do DataTables
@@ -376,16 +401,20 @@ func (h *CRUDHandler) CreateTransaction(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
 	}
 
-	// Criar a instância de Transaction
-	transaction := models.Transaction{}
-	if err := c.Bind(&transaction); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})
+	newTransaction := models.Transaction{}
+	newTransaction.TeamID = user.TeamID
+
+	typeParam := c.FormValue("date")
+	if typeParam == "1" {
+		// newTransaction.Type, _ = strconv.Atoi(typeParam)
 	}
 
-	// Definir TeamID
-	transaction.TeamID = user.TeamID
-
-	// Tratamento para comprovante (upload de arquivo)
+	if err := c.Bind(&newTransaction); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Dados inválidos",
+			"message": err.Error(),
+		})
+	}
 
 	file, err := c.FormFile("proof")
 	if err == nil {
@@ -394,10 +423,16 @@ func (h *CRUDHandler) CreateTransaction(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao abrir o arquivo"})
 		}
 		defer src.Close()
+		dateStr := c.FormValue("date")
+
+		t, err := time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro converter a data"})
+		}
 
 		// Criar o diretório do ano/mês
-		year, month, _ := time.Now().Date()
-		dir := fmt.Sprintf("static/comprovantes/%d/%02d/", year, month)
+		anoMes := t.Format("2006/01")
+		dir := fmt.Sprintf("static/comprovantes/%v/", anoMes)
 		os.MkdirAll(dir, os.ModePerm)
 
 		// Gerar o caminho do arquivo
@@ -413,15 +448,41 @@ func (h *CRUDHandler) CreateTransaction(c echo.Context) error {
 		io.Copy(dst, src)
 
 		// Salvar o caminho do comprovante
-		transaction.Proof = &dstPath
+		newTransaction.Proof = &dstPath
 	}
 
 	// Salvar a transação no banco
-	if err := h.DB.Create(&transaction).Error; err != nil {
+	if err := h.DB.Create(&newTransaction).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao salvar"})
 	}
 
-	return c.JSON(http.StatusCreated, transaction)
+	accountDestination := c.FormValue("account_destination")
+
+	if accountDestination != "" {
+		acDes, _ := strconv.ParseUint(accountDestination, 10, 64)
+		var accDestination uint = uint(acDes)
+
+		transactionDestination := models.Transaction{}
+		transactionDestination.TeamID = newTransaction.TeamID
+		transactionDestination.Date = newTransaction.Date
+		transactionDestination.Type = 1
+		transactionDestination.Description = newTransaction.Description
+		transactionDestination.CategoryID = newTransaction.CategoryID
+		transactionDestination.AccountID = accDestination
+		transactionDestination.TransactionOrigin = &newTransaction.ID
+		transactionDestination.Value = newTransaction.Value
+
+		if err := h.DB.Create(&transactionDestination).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error":   "Erro ao salvar",
+				"message": "Erro ao salvar na conta de destino",
+				"detail":  err.Error(),
+			})
+		}
+
+	}
+
+	return c.JSON(http.StatusCreated, newTransaction)
 }
 
 func (h *CRUDHandler) ListTransactions(c echo.Context) error {
@@ -440,18 +501,19 @@ func (h *CRUDHandler) ListTransactions(c echo.Context) error {
 	start, _ := strconv.Atoi(c.QueryParam("start"))
 	length, _ := strconv.Atoi(c.QueryParam("length"))
 	search := c.QueryParam("search[value]")
-	orderColumn := c.QueryParam("order[0][column]") // Índice da coluna
-	orderDir := c.QueryParam("order[0][dir]")       // Direção (asc ou desc)
 
 	// Definir ordenação padrão
 	orderBy := "date DESC"
-	if orderColumn != "" && orderDir != "" {
-		columns := []string{"id", "date", "amount", "category_id", "account_id"} // Defina as colunas do DataTables
-		colIndex, err := strconv.Atoi(orderColumn)
-		if err == nil && colIndex >= 0 && colIndex < len(columns) {
-			orderBy = columns[colIndex] + " " + orderDir
-		}
-	}
+
+	// orderColumn := c.QueryParam("order[0][column]") // Índice da coluna
+	// orderDir := c.QueryParam("order[0][dir]")       // Direção (asc ou desc)
+	// if orderColumn != "" && orderDir != "" {
+	// 	columns := []string{"id", "date", "amount", "category_id", "account_id"} // Defina as colunas do DataTables
+	// 	colIndex, err := strconv.Atoi(orderColumn)
+	// 	if err == nil && colIndex >= 0 && colIndex < len(columns) {
+	// 		orderBy = columns[colIndex] + " " + orderDir
+	// 	}
+	// }
 
 	// Criar a query inicial
 	query := h.DB.
@@ -476,6 +538,17 @@ func (h *CRUDHandler) ListTransactions(c echo.Context) error {
 
 	// Contar total de registros filtrados
 	totalFiltered := totalRecords
+
+	// Prefixo do arquivo
+	baseURL := "http://localhost:8000/"
+
+	// Adicionando o prefixo ao proof
+	for i := range transactions {
+		if transactions[i].Proof != nil && *transactions[i].Proof != "" {
+			newPath := baseURL + *transactions[i].Proof
+			transactions[i].Proof = &newPath // Atualiza o ponteiro
+		}
+	}
 
 	// Retornar resposta no formato esperado pelo DataTables
 	response := map[string]interface{}{

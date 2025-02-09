@@ -52,7 +52,7 @@ type Account struct {
 type Transaction struct {
 	ID                uint           `gorm:"primarykey" json:"id"`
 	TeamID            uint           `gorm:"index;index:idx_date_team"`
-	Date              string         `gorm:"type:date;index:idx_date_team" json:"date_at" form:"date_at"`
+	Date              string         `gorm:"type:date;index:idx_date_team" json:"date_at" form:"date"`
 	Type              int            `gorm:"not null" json:"type" form:"type"` // 1 - Entrada, 2 - Saída, 3 - Transferência
 	Description       string         `gorm:"size:255;not null" json:"description" form:"description"`
 	Value             float64        `gorm:"not null" json:"value" form:"value"`

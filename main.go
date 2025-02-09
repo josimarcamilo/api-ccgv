@@ -70,9 +70,8 @@ func main() {
 	e.Static("/static", "static")
 
 	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
+		return c.Redirect(http.StatusSeeOther, "/home")
 	})
-	e.GET("/hello", Hello)
 	e.GET("/login", Login)
 	e.GET("/register", Register)
 
@@ -209,73 +208,6 @@ func main() {
 		})
 	})
 
-	// e.GET("/accounts/create", AccountCreate)
-	// // e.GET("/accounts/list", AccountList)
-
-	// e.POST("/accounts", func(c echo.Context) error {
-	// 	// Recuperar a sessão
-	// 	session, err := storeSessions.Get(c.Request(), "session-id")
-	// 	if err != nil {
-	// 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
-	// 	}
-
-	// 	// Obter o user_id da sessão
-	// 	userLogged, ok := session.Values["user"].(models.User)
-	// 	if !ok || userLogged.ID == 0 {
-	// 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
-	// 	}
-
-	// 	// Fazer o bind dos dados do JSON para o modelo Account
-	// 	var account models.Account
-	// 	if err := c.Bind(&account); err != nil {
-	// 		return c.JSON(http.StatusBadRequest, map[string]string{
-	// 			"error": "Dados inválidos",
-	// 		})
-	// 	}
-
-	// 	// Verificar campos obrigatórios
-	// 	if account.Name == "" {
-	// 		return c.JSON(http.StatusBadRequest, map[string]string{
-	// 			"error": "O nome da conta é obrigatório",
-	// 		})
-	// 	}
-
-	// 	account.TeamID = userLogged.TeamID
-
-	// 	// Salvar no banco de dados
-	// 	if err := db.Create(&account).Error; err != nil {
-	// 		return c.JSON(http.StatusInternalServerError, map[string]string{
-	// 			"error": "Erro ao salvar conta",
-	// 		})
-	// 	}
-
-	// 	return c.Redirect(http.StatusSeeOther, "/accounts/list")
-	// })
-
-	// e.GET("/accounts", func(c echo.Context) error {
-	// 	// Recuperar a sessão
-	// 	session, err := storeSessions.Get(c.Request(), "session-id")
-	// 	if err != nil {
-	// 		return c.Redirect(http.StatusSeeOther, "/login")
-	// 	}
-
-	// 	// Obter o user_id da sessão
-	// 	userID, ok := session.Values["userID"].(uint)
-	// 	if !ok || userID == 0 {
-	// 		return c.Redirect(http.StatusSeeOther, "/login")
-	// 	}
-
-	// 	// Buscar contas do usuário
-	// 	var accounts []models.Account
-	// 	if err := db.Where("user_id = ?", userID).Find(&accounts).Error; err != nil {
-	// 		return c.JSON(http.StatusInternalServerError, map[string]string{
-	// 			"error": "Erro ao buscar contas",
-	// 		})
-	// 	}
-
-	// 	return c.JSON(http.StatusOK, accounts)
-	// })
-
 	e.GET("/crud-config/:entity", GetCrudConfig)
 	e.GET("/crud/:entity", Crud)
 
@@ -307,6 +239,7 @@ func main() {
 	e.PUT("/accounts/:id", accountHandler.Update)
 	e.DELETE("/accounts/:id", accountHandler.Delete)
 
+	e.GET("/transactions/create", CreateTransaction)
 	e.GET("/transactions/table", ListTransactions)
 	e.POST("/transactions", transactionHandler.CreateTransaction)
 	e.GET("/transactions", transactionHandler.ListTransactions)
@@ -338,6 +271,13 @@ func GetCrudConfig(c echo.Context) error {
 				{"name": "id", "label": "ID", "data": "id", "type": "number", "readonly": true},
 				{"name": "name", "label": "Nome", "data": "name", "type": "text", "required": true},
 			},
+		},
+		"transactionscreate": map[string]interface{}{
+			"apiUrlCategories":  "http://localhost:8000/categories?toselect=true",
+			"apiUrlAccounts":    "http://localhost:8000/accounts?toselect=true",
+			"apiUrlTransaction": "http://localhost:8000/transactions",
+			"apiUrlExit":        "http://localhost:8000/accounts",
+			"apiUrlTransfer":    "http://localhost:8000/accounts",
 		},
 		"accounts": map[string]interface{}{
 			"entity": "accounts",
@@ -389,13 +329,35 @@ func Crud(c echo.Context) error {
 }
 
 func ListTransactions(c echo.Context) error {
+	err := VerifySession(c)
+	if err != nil {
+		return err
+	}
+
 	return c.Render(http.StatusOK, "transactions", map[string]interface{}{
 		"Entity":       "transactions",
 		"CurrentRoute": "/transactions/table",
 	})
 }
 
+func CreateTransaction(c echo.Context) error {
+	err := VerifySession(c)
+	if err != nil {
+		return err
+	}
+
+	return c.Render(http.StatusOK, "transactions-create", map[string]interface{}{
+		"Entity":       "transactions",
+		"CurrentRoute": "/transactions/create",
+	})
+}
+
 func ListUsers(c echo.Context) error {
+	err := VerifySession(c)
+	if err != nil {
+		return err
+	}
+
 	return c.Render(http.StatusOK, "users", map[string]interface{}{
 		"Entity":       "users",
 		"CurrentRoute": "/users/table",
@@ -403,6 +365,11 @@ func ListUsers(c echo.Context) error {
 }
 
 func ListCategories(c echo.Context) error {
+	err := VerifySession(c)
+	if err != nil {
+		return err
+	}
+
 	return c.Render(http.StatusOK, "categories", map[string]interface{}{
 		"Entity":       "categories",
 		"CurrentRoute": "/categories/table",
@@ -410,6 +377,11 @@ func ListCategories(c echo.Context) error {
 }
 
 func ListAccounts(c echo.Context) error {
+	err := VerifySession(c)
+	if err != nil {
+		return err
+	}
+
 	return c.Render(http.StatusOK, "accounts", map[string]interface{}{
 		"Entity":       "accounts",
 		"CurrentRoute": "/accounts/table",
@@ -425,6 +397,10 @@ func Login(c echo.Context) error {
 }
 
 func Home(c echo.Context) error {
+	err := VerifySession(c)
+	if err != nil {
+		return err
+	}
 
 	return c.Render(http.StatusOK, "home", map[string]interface{}{
 		"CurrentRoute": "/home",
@@ -457,4 +433,18 @@ func AccountList(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/login")
 	}
 	return c.Render(http.StatusOK, "account-list", "World")
+}
+
+func VerifySession(c echo.Context) error {
+	session, err := storeSessions.Get(c.Request(), "session-id")
+	if err != nil {
+		return c.Redirect(http.StatusSeeOther, "/login")
+	}
+
+	user, ok := session.Values["user"].(models.User)
+	if !ok || user.ID == 0 {
+		return c.Redirect(http.StatusSeeOther, "/login")
+	}
+
+	return nil
 }

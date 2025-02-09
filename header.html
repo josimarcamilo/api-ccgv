@@ -44,6 +44,12 @@
                 </a>
               </li>
               <li>
+                <a href="/transactions/create" class="nav-link {{if eq .CurrentRoute "/transactions/create"}}active{{else}}link-body-emphasis{{end}}">
+                  <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
+                  Nova Transação
+                </a>
+              </li>
+              <li>
                 <a href="/transactions/table" class="nav-link {{if eq .CurrentRoute "/transactions/table"}}active{{else}}link-body-emphasis{{end}}">
                   <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
                   Transações
