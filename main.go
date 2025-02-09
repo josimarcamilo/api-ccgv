@@ -218,6 +218,7 @@ func main() {
 	// Registrar rotas
 	e.POST("/categories", categoryHandler.CreateCategory)
 	e.GET("/categories", categoryHandler.ListCategories)
+	e.GET("/categories/edit/:id", FormCategoryEdit)
 	e.GET("/categories/:id", categoryHandler.GetByID)
 	e.PUT("/categories/:id", categoryHandler.Update)
 	e.DELETE("/categories/:id", categoryHandler.Delete)
@@ -264,9 +265,10 @@ func GetCrudConfig(c echo.Context) error {
 			},
 		},
 		"categories": map[string]interface{}{
-			"entity": "categories",
-			"title":  "Categorias",
-			"apiUrl": "http://localhost:8000/categories",
+			"entity":   "categories",
+			"title":    "Categorias",
+			"apiUrl":   "http://localhost:8000/categories",
+			"formEdit": "http://localhost:8000/categories/edit/",
 			"fields": []map[string]interface{}{
 				{"name": "id", "label": "ID", "data": "id", "type": "number", "readonly": true},
 				{"name": "name", "label": "Nome", "data": "name", "type": "text", "required": true},
@@ -373,6 +375,20 @@ func ListCategories(c echo.Context) error {
 	return c.Render(http.StatusOK, "categories", map[string]interface{}{
 		"Entity":       "categories",
 		"CurrentRoute": "/categories/table",
+	})
+}
+
+func FormCategoryEdit(c echo.Context) error {
+	err := VerifySession(c)
+	if err != nil {
+		return err
+	}
+	id := c.Param("id")
+
+	return c.Render(http.StatusOK, "categories-edit", map[string]interface{}{
+		"Entity":       "categories",
+		"EntityId":     id,
+		"CurrentRoute": "/categories/edit",
 	})
 }
 

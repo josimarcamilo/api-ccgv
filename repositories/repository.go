@@ -159,14 +159,17 @@ func (h *CRUDHandler) GetByID(c echo.Context) error {
 // Atualizar Registro
 func (h *CRUDHandler) Update(c echo.Context) error {
 	id := c.Param("id")
-	updatedRecord := h.Model
 
+	var updatedRecord models.Category
 	if err := h.DB.First(&updatedRecord, id).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "Registro não encontrado"})
 	}
 
 	if err := c.Bind(&updatedRecord); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Dados inválidos",
+			"message": err.Error(),
+		})
 	}
 
 	if err := h.DB.Save(&updatedRecord).Error; err != nil {

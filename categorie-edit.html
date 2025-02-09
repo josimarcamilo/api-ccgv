@@ -1,0 +1,100 @@
+{{define "categories-edit"}}
+{{ template "header.html" . }}
+<div class="col">
+    <h3 class="mt-3">Editar categoria</h3>
+
+    <div class="row">
+        <form id="edit-form" class="row g-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="inputName" class="form-label">Nome</label>
+                    <input type="text" name="name" class="form-control" id="inputName" required>
+                  </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mt-3">
+                  <button type="submit" class="btn btn-primary">Editar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            
+            // Carregar configuração do backend
+            const configResponse = await fetch(`/crud-config/categories`);
+            const config = await configResponse.json();
+
+            document.title = `Gerenciamento de ${config.title}`;
+
+            const apiUrl = config.apiUrl;
+            const form = document.getElementById("edit-form");
+            var entityId
+            // var table = new DataTable('#data-table', {
+            //     ajax: apiUrl,
+            //     processing: true,
+            //     serverSide: true,
+            //     columns: [
+            //         {"data": "name"},
+            //         {
+            //             "data": null, // Indica que a coluna será personalizada
+            //             "orderable": false, // Impede ordenação na coluna de ações
+            //             "searchable": false, // Impede busca na coluna de ações
+            //             "render": function(data, type, row) {
+            //                 return `
+            //                     <button onclick="editItem(${row.id})">✏️ Editar</button>
+            //                     <button onclick="deleteItem(${row.id})">🗑️ Deletar</button>
+            //                 `;
+            //             }
+            //         }
+            //     ]
+            // });
+
+            
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                console.log( apiUrl, formData)
+                
+                res = await fetch(`${apiUrl}/${entityId}`, {
+                    method: "PUT",
+                    body: formData,
+                });
+                const json = await res.json();
+                if(res && res.status != 200 && json && json.message){
+                    alert(json.message)
+                }
+                if(res && res.status == 200){
+                    alert("Registro criado com sucesso!")
+                }
+            });
+
+            // Deletar Registro
+            window.deleteItem = async (id) => {
+                if (confirm("Tem certeza que deseja excluir este item?")) {
+                    await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+                    loadData();
+                }
+            };
+
+            window.getRecord = async (id) => {
+                console.log("getRecord")
+
+                const response = await fetch(`${apiUrl}/${id}`);
+                const data = await response.json();
+                config.fields.forEach(field => {
+                    console.log(field)
+                    if (!field.readonly) {
+                        document.querySelector(`[name="${field.name}"]`).value = data[field.name] || "";
+                    }
+                });
+            };
+            entityId = {{.EntityId}}
+            getRecord(entityId)
+        });
+    </script>
+</div>
+{{ template "footer.html" }}
+{{end}}

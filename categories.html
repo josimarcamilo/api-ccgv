@@ -27,11 +27,13 @@
         <thead>
             <tr>
                 <th>Nome</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tfoot>
             <tr>
                 <th>Nome</th>
+                <th>Ações</th>
             </tr>
         </tfoot>
     </table>
@@ -53,6 +55,17 @@
                 serverSide: true,
                 columns: [
                     {"data": "name"},
+                    {
+                        "data": null, // Indica que a coluna será personalizada
+                        "orderable": false, // Impede ordenação na coluna de ações
+                        "searchable": false, // Impede busca na coluna de ações
+                        "render": function(data, type, row) {
+                            return `
+                                <a class="btn btn-outline-warning" href="${config.formEdit+row.id}" role="button">✏️ Editar</a>
+                                <button onclick="deleteItem(${row.id})" type="button" class="btn btn-outline-danger">🗑️ Deletar</button>
+                            `;
+                        }
+                    }
                 ]
             });
 

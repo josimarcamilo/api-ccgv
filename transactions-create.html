@@ -28,6 +28,10 @@
                         <select class="form-control" id="inputAccount" name="account_id" required>
                         </select>
                     </div>
+                    <div class="col-12">
+                        <label for="inputFileExit" class="form-label">Comprovante (opicional)</label>
+                        <input type="file" name="proof" class="form-control" id="inputFileExit" required>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-12 mt-3">
@@ -207,17 +211,6 @@
 
                 const formData = new FormData(formExit);
                 formData.append("type", 2)
-                // if (data.value) {
-                //     data.value = parseFloat(data.value);
-                // }
-
-                // if (data.category_id) {
-                //     data.category_id = parseInt(data.category_id, 10);
-                // }
-
-                // if (data.account_id) {
-                //     data.account_id = parseInt(data.account_id, 10);
-                // }
 
                 createTransaction(formData)
                 console.log("fim submit")
