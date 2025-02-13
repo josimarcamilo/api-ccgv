@@ -41,9 +41,10 @@ type Category struct {
 type Account struct {
 	ID          uint           `gorm:"primarykey" json:"id"`
 	Name        string         `gorm:"size:255;not null" json:"name" form:"name"`
-	Balance     float32        `gorm:"not null;default:0" json:"balance,string"`
+	Balance     float64        `gorm:"type:decimal(10,2);not null;default:0" json:"balance,string"`
 	BalanceDate string         `json:"balance_date"`
 	TeamID      uint           `gorm:"index"` // FK para Time
+	ToReceive   bool           `gorm:"default:false" form:"to_receive" json:"to_receive"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at"`
@@ -81,5 +82,5 @@ type Approval struct {
 	TransactionID uint   `gorm:"index"` // FK para Transação
 	UserID        uint   `gorm:"index"` // FK para usuário
 	Status        string // aprovado, reprovado
-	Observation   string
+	Observation   *string
 }

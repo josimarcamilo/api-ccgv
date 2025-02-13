@@ -652,3 +652,55 @@ func (h *CRUDHandler) CreateUser(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, model)
 }
+
+type BalanceDTO struct {
+	DateToBalance string `json:"date_to_balance" form:"date_to_balance" query:"date_to_balance"`
+}
+
+func (h *CRUDHandler) GetAccountBalance(c echo.Context) error {
+	date := BalanceDTO{}
+
+	if err := c.Bind(&date); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Dados inválidos",
+			"message": err.Error(),
+		})
+	}
+
+	if date.DateToBalance == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Date parameter is required",
+			"message": "Informe uma data para gerar o saldo",
+		})
+	}
+
+	if err := h.DB.Exec(`
+		UPDATE accounts
+		SET balance = (
+			SELECT COALESCE(SUM(
+				CASE 
+					WHEN transactions.type = 1 THEN transactions.value 
+					WHEN transactions.type = 2 THEN -transactions.value 
+					ELSE 0 
+				END
+			), 0)
+			FROM transactions
+			WHERE transactions.account_id = accounts.id 
+			AND transactions.date <= ? 
+			AND transactions.deleted_at IS NULL
+		)
+		WHERE EXISTS (
+			SELECT 1 FROM transactions 
+			WHERE transactions.account_id = accounts.id
+			AND transactions.date <= ?
+			AND transactions.deleted_at IS NULL
+		)
+	`, date.DateToBalance, date.DateToBalance).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao atualizar saldo",
+			"message": err.Error(),
+		})
+	}
+
+	return c.NoContent(http.StatusOK)
+}

@@ -6,11 +6,17 @@
     <!-- Formulário de Cadastro/Edição -->
     <div class="row">
         <form id="crud-form" class="row g-3">
-            <div class="row">
+            <div class="row align-items-center">
                 <div class="col-md-6">
                     <label for="inputName" class="form-label">Nome</label>
                     <input type="text" name="name" class="form-control" id="inputName" required>
-                  </div>
+                </div>
+            </div>
+            <div class="row align-items-center">
+                <div class="ms-2 mt-2 mb-2 col-md-6 form-check form-switch">
+                    <input class="form-control form-check-input" type="checkbox" name="to_receive" role="switch" id="toreceive">
+                    <label class="form-label form-check-label" for="toreceive">É uma conta a receber?</label>
+                </div>
             </div>
             <div class="row">
                 <div class="col-md-6">
@@ -20,16 +26,17 @@
         </form>
     </div>
 
-    <!-- Formulário de Cadastro/Edição -->
+    <hr>
+
     <div class="row">
         <form id="generate-balance" class="row g-3">
             <div class="row">
                 <div class="col-md-6">
                     <label for="inputDate" class="form-label">Escolha uma data para gerar o saldo das contas</label>
-                    <input type="date" name="date" class="form-control" id="inputDate" required>
+                    <input type="date" name="date_to_balance" class="form-control" id="inputDate" required>
                   </div>
             </div>
-            <div class="row">
+            <div class="row mt-3">
                 <div class="col-md-6">
                   <button type="submit" class="btn btn-primary">Gerar até a data escolhida</button>
                 </div>
@@ -37,8 +44,9 @@
         </form>
     </div>
 
-    <h3 class="mt-3">Contas</h3>
+    <hr>
 
+    <h3 class="mt-3">Contas</h3>
     <!-- Tabela de Listagem -->
     <table class="mt-3" id="data-table" width="90%">
         <thead>
@@ -46,6 +54,7 @@
                 <th>Nome</th>
                 <th>Saldo</th>
                 <th>Data do Saldo</th>
+                <th>A receber</th>
             </tr>
         </thead>
         <tfoot>
@@ -53,6 +62,7 @@
                 <th>Nome</th>
                 <th>Saldo</th>
                 <th>Data do Saldo</th>
+                <th>A receber</th>
             </tr>
         </tfoot>
     </table>
@@ -72,10 +82,20 @@
                 ajax: apiUrl,
                 processing: true,
                 serverSide: true,
+                pageLength: 50,
                 columns: [
                     {"data": "name"},
                     {"data": "balance"},
                     {"data": "balance_date"},
+                    {
+                        "data": "to_receive",
+                        "render": function(data, type, row) {
+                            if(data){
+                                return "sim";
+                            }
+                            return "não";
+                        }
+                    },
                 ]
             });
 
@@ -89,8 +109,12 @@
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-                console.log("form", data)
+                if(formData.get("to_receive") == "on"){
+                    formData.set("to_receive", 1)
+                }else{
+                    formData.set("to_receive", 0)
+                }
+                console.log(formData.get("name"), formData.get("to_receive"))
                 console.log("apiUrl", apiUrl)
                 
                 await fetch(apiUrl, {
@@ -99,6 +123,27 @@
                 });
 
                 form.reset();
+                loadData();
+            });
+
+            document.getElementById("generate-balance").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                console.log("apiUrl", config.urlGetBalance)
+                
+                var res = await fetch(config.urlGetBalance, {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const json = await res.json();
+                if(res && res.status != 200 && json && json.message){
+                    alert(json.message)
+                    return;
+                }
+
+                e.target.reset();
                 loadData();
             });
 

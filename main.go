@@ -239,6 +239,7 @@ func main() {
 	e.GET("/accounts/:id", accountHandler.GetByID)
 	e.PUT("/accounts/:id", accountHandler.Update)
 	e.DELETE("/accounts/:id", accountHandler.Delete)
+	e.POST("/account-balance", accountHandler.GetAccountBalance)
 
 	e.GET("/transactions/create", CreateTransaction)
 	e.GET("/transactions/table", ListTransactions)
@@ -282,9 +283,10 @@ func GetCrudConfig(c echo.Context) error {
 			"apiUrlTransfer":    "http://localhost:8000/accounts",
 		},
 		"accounts": map[string]interface{}{
-			"entity": "accounts",
-			"title":  "Contas Contábeis",
-			"apiUrl": "http://localhost:8000/accounts",
+			"entity":        "accounts",
+			"title":         "Contas Contábeis",
+			"apiUrl":        "http://localhost:8000/accounts",
+			"urlGetBalance": "http://localhost:8000/account-balance",
 			"fields": []map[string]interface{}{
 				{"name": "id", "label": "ID", "data": "id", "type": "number", "readonly": true},
 				{"name": "name", "label": "Nome", "data": "name", "type": "text", "required": true},
