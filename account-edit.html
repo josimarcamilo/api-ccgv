@@ -1,7 +1,7 @@
-{{define "categories-edit"}}
+{{define "accounts-edit"}}
 {{ template "header.html" . }}
 <div class="col">
-    <h3 class="mt-3">Editar categoria</h3>
+    <h3 class="mt-3">Editar Conta</h3>
 
     <div class="row">
         <form id="edit-form" class="row g-3">
@@ -23,35 +23,12 @@
         document.addEventListener("DOMContentLoaded", async () => {
             
             // Carregar configuração do backend
-            const configResponse = await fetch(`/crud-config/categories`);
+            const configResponse = await fetch(`/crud-config/accounts`);
             const config = await configResponse.json();
-
-            document.title = `Gerenciamento de ${config.title}`;
 
             const apiUrl = config.apiUrl;
             const form = document.getElementById("edit-form");
             var entityId
-            // var table = new DataTable('#data-table', {
-            //     ajax: apiUrl,
-            //     processing: true,
-            //     serverSide: true,
-            //     columns: [
-            //         {"data": "name"},
-            //         {
-            //             "data": null, // Indica que a coluna será personalizada
-            //             "orderable": false, // Impede ordenação na coluna de ações
-            //             "searchable": false, // Impede busca na coluna de ações
-            //             "render": function(data, type, row) {
-            //                 return `
-            //                     <button onclick="editItem(${row.id})">✏️ Editar</button>
-            //                     <button onclick="deleteItem(${row.id})">🗑️ Deletar</button>
-            //                 `;
-            //             }
-            //         }
-            //     ]
-            // });
-
-            
 
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();

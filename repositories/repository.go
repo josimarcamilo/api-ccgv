@@ -179,6 +179,29 @@ func (h *CRUDHandler) Update(c echo.Context) error {
 	return c.JSON(http.StatusOK, updatedRecord)
 }
 
+// Atualizar Registro
+func (h *CRUDHandler) UpdateAccount(c echo.Context) error {
+	id := c.Param("id")
+
+	var updatedRecord models.Account
+	if err := h.DB.First(&updatedRecord, id).Error; err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Registro não encontrado"})
+	}
+
+	if err := c.Bind(&updatedRecord); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Dados inválidos",
+			"message": err.Error(),
+		})
+	}
+
+	if err := h.DB.Save(&updatedRecord).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao atualizar"})
+	}
+
+	return c.JSON(http.StatusOK, updatedRecord)
+}
+
 // Deletar Registro
 func (h *CRUDHandler) Delete(c echo.Context) error {
 	id := c.Param("id")

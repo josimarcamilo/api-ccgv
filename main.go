@@ -237,7 +237,8 @@ func main() {
 	e.POST("/accounts", accountHandler.CreateAccount)
 	e.GET("/accounts", accountHandler.ListAccounts)
 	e.GET("/accounts/:id", accountHandler.GetByID)
-	e.PUT("/accounts/:id", accountHandler.Update)
+	e.PUT("/accounts/:id", accountHandler.UpdateAccount)
+	e.GET("/accounts/edit/:id", FormAccountEdit)
 	e.DELETE("/accounts/:id", accountHandler.Delete)
 	e.POST("/account-balance", accountHandler.GetAccountBalance)
 
@@ -287,6 +288,7 @@ func GetCrudConfig(c echo.Context) error {
 			"title":         "Contas Contábeis",
 			"apiUrl":        "http://localhost:8000/accounts",
 			"urlGetBalance": "http://localhost:8000/account-balance",
+			"formEdit":      "http://localhost:8000/accounts/edit/",
 			"fields": []map[string]interface{}{
 				{"name": "id", "label": "ID", "data": "id", "type": "number", "readonly": true},
 				{"name": "name", "label": "Nome", "data": "name", "type": "text", "required": true},
@@ -391,6 +393,20 @@ func FormCategoryEdit(c echo.Context) error {
 		"Entity":       "categories",
 		"EntityId":     id,
 		"CurrentRoute": "/categories/edit",
+	})
+}
+
+func FormAccountEdit(c echo.Context) error {
+	err := VerifySession(c)
+	if err != nil {
+		return err
+	}
+	id := c.Param("id")
+
+	return c.Render(http.StatusOK, "accounts-edit", map[string]interface{}{
+		"Entity":       "accounts",
+		"EntityId":     id,
+		"CurrentRoute": "/accounts/edit",
 	})
 }
 

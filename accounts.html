@@ -53,16 +53,16 @@
             <tr>
                 <th>Nome</th>
                 <th>Saldo</th>
-                <th>Data do Saldo</th>
                 <th>A receber</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tfoot>
             <tr>
                 <th>Nome</th>
                 <th>Saldo</th>
-                <th>Data do Saldo</th>
                 <th>A receber</th>
+                <th>Ações</th>
             </tr>
         </tfoot>
     </table>
@@ -86,7 +86,6 @@
                 columns: [
                     {"data": "name"},
                     {"data": "balance"},
-                    {"data": "balance_date"},
                     {
                         "data": "to_receive",
                         "render": function(data, type, row) {
@@ -96,6 +95,16 @@
                             return "não";
                         }
                     },
+                    {
+                        "data": null,
+                        "orderable": false,
+                        "searchable": false,
+                        "render": function(data, type, row) {
+                            return `
+                                <a class="btn btn-outline-warning" href="${config.formEdit+row.id}" role="button">✏️ Editar</a>
+                            `;
+                        }
+                    }
                 ]
             });
 

@@ -1,19 +1,36 @@
-- [x] escolher se a conta vai ser "A receber" (conta desconsiderada nas somas)
-    - CCRD (taxas de lixo, IPTU)
-    - CCVI (taxas de lixo, IPTU)
-    - Empréstimo Lar dos Velhinhos
-    - Empréstimo CMGV
-    - Aplicacao financeira
+# Usuário
+- [x] cadastro de usuários no time
 
-- [x] colocar comprovante nas receitas como opicional
+# Categorias
+- [x] editar categoria
 - [] exluir categoria
-- [] editar uma transacao
+
+# Contas
+- [x] editar conta
 - [x] calcular saldo das contas de acordo com uma data
-- [] recurso para aprovar/reprovar uma transacao (talvez na tela de visualizar já resolva). Colocar observacao (opicional)
-- [] relatorio de despesas por categia de um periodo de data
+- [x] escolher se a conta vai ser "A receber" (conta desconsiderada nas somas)
+Contas para criar:
+    - CCRD (taxas de lixo, IPTU) a receber
+    - CCVI (taxas de lixo, IPTU) a receber
+    - Lar dos Velhinhos a receber
+    - CMGV a receber
+    - Aplicacao financeira a resgatar
+
+# Transações
+- [x] colocar comprovante nas receitas como opicional
+- [] editar uma transacao
 - [] importar planilha
 - [] importar ofx
+
+# Fiscal
+- [] recurso para aprovar/reprovar uma transacao (talvez na tela de visualizar já resolva). Colocar observacao (opicional)
+
+# Relatórios
+- [] relatorio de despesas e receitas por categia de um periodo de data
+
+# Cadatro de diretoria
+- [] cadastro de membros diretoria (nome, telefone, email)
+- [] cadastro membros do conselho fiscal (nome, telefone, email)
+
+# Sitema
 - [] colocar alerts de sucesso e falha
-- [] gerar relatorio de um periodo
-- [] cadastro de membros diretoria
-- [] cadastro membros do conselho fiscal
