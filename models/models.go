@@ -38,6 +38,16 @@ type Category struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 }
 
+// categorias para estarem igual ao mapa mensal
+type CategoryMap struct {
+	ID        uint           `gorm:"primarykey" json:"id"`
+	Name      string         `gorm:"size:255;not null" form:"name" json:"name"`
+	TeamID    uint           `gorm:"index" json:"team_id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+}
+
 type Account struct {
 	ID          uint           `gorm:"primarykey" json:"id"`
 	Name        string         `gorm:"size:255;not null" json:"name" form:"name"`
@@ -52,17 +62,20 @@ type Account struct {
 
 type Transaction struct {
 	ID                uint           `gorm:"primarykey" json:"id"`
-	TeamID            uint           `gorm:"index;index:idx_date_team"`
+	TeamID            uint           `gorm:"index:idx_date_team;index:idx_external_id"`
+	AccountID         uint           `gorm:"null" json:"account_id" form:"account_id"`
 	Date              string         `gorm:"type:date;index:idx_date_team" json:"date_at" form:"date"`
 	Type              int            `gorm:"not null" json:"type" form:"type"` // 1 - Entrada, 2 - Saída, 3 - Transferência
 	Description       string         `gorm:"size:255;not null" json:"description" form:"description"`
 	Value             float64        `gorm:"not null" json:"value" form:"value"`
-	CategoryID        uint           `gorm:"not null" json:"category_id" form:"category_id"`
+	CategoryID        uint           `gorm:"null" json:"category_id" form:"category_id"`
 	Category          Category       `gorm:"foreignKey:CategoryID" json:"category"`
-	AccountID         uint           `gorm:"not null" json:"account_id" form:"account_id"`
+	CategoryMapID     uint           `gorm:"null" json:"category_map_id" form:"category_map_id"`
+	CategoryMap       CategoryMap    `gorm:"foreignKey:CategoryMapID" json:"category_map"`
 	Account           Account        `gorm:"foreignKey:AccountID" json:"account"`
 	Proof             *string        `json:"proof" form:"proof"`
 	TransactionOrigin *uint          `gorm:"null" json:"transaction_origin"`
+	ExternalId        string         `gorm:"null;index:idx_external_id" json:"external_id" form:"external_id"`
 	CreatedAt         time.Time      `json:"created_at"`
 	UpdatedAt         time.Time      `json:"updated_at"`
 	DeletedAt         gorm.DeletedAt `gorm:"index" json:"deleted_at"`

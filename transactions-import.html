@@ -1,0 +1,83 @@
+{{define "transactions-import"}}
+{{ template "header.html" . }}
+<div class="col">
+    
+    <div class="row mt-5">
+        <div class="col">
+            <form id="form-import-ofx" class="row g-3">
+                <h3 class="mt-3">Importar OFX</h3>
+                <div class="row">
+                    <div class="col-12">
+                        <label for="inputFileExit" class="form-label">Selecione o arquivo OFX do banco</label>
+                        <input type="file" name="file_ofx" accept=".ofx" class="form-control" id="inputFileExit" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 mt-3">
+                      <button type="submit" class="btn btn-primary">Importar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col">
+            <form id="form-import-excel" class="row g-3">
+                <h3 class="mt-3">Importar Planilha Excel</h3>
+                <div class="row">
+                    <div class="col-12">
+                        <label for="inputFileExit" class="form-label">Selecione a planilha no modelo indicado</label>
+                        <input type="file" name="proof" class="form-control" id="inputFileExit" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 mt-3">
+                      <button type="submit" class="btn btn-primary">Importar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            var resapi
+            // Carregar configuração do backend
+            const configResponse = await fetch(`/crud-config/transactionscreate`);
+            const config = await configResponse.json();
+            console.log(config)
+
+            const formImportOfx = document.getElementById("form-import-ofx");
+
+            formImportOfx.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const formData = new FormData(formImportOfx);
+                store(formData)
+                console.log("fim submit")
+                formImportOfx.reset();
+            });
+
+
+            async function store(formData){
+                console.log("store", formData)
+                res = await fetch(config.apiUrlImportOfx, {
+                    method: "POST",
+                    body: formData,
+                });
+                
+                resapi = res
+                const json = await res.json();
+                
+                console.log(res, res.status, json)
+                if(res && json && json.message){
+                    alert(json.message)
+                }
+            }
+        });
+    </script>
+</div>
+{{ template "footer.html" }}
+{{end}}

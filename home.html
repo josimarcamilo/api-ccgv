@@ -1,10 +1,7 @@
 {{define "home"}}
 {{ template "header.html" . }}
 <div class="col">
-    <h1>Home</h1>
-    <pre>{{ printf "%#v" . }}</pre>
-    <pre>{{if eq .CurrentRoute "/home"}} active {{end}}</pre>
-    <pre>{{if eq .CurrentRoute "/home"}}active{{else}}link-body-emphasis{{end}}</pre>
+    <h1 class="mt-3">Sistema Gerencial </h1>
 </div>
 {{ template "footer.html" }}
 {{end}}

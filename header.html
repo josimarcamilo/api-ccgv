@@ -15,7 +15,7 @@
           <div class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary" style="width: 280px; height: 100vh;">
             <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
               <svg class="bi pe-none me-2" width="40" height="32"><use xlink:href="#bootstrap"/></svg>
-              <span class="fs-4">Sidebar</span>
+              <span class="fs-4">CCGV</span>
             </a>
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
@@ -47,6 +47,12 @@
                 <a href="/transactions/create" class="nav-link {{if eq .CurrentRoute "/transactions/create"}}active{{else}}link-body-emphasis{{end}}">
                   <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
                   Nova Transação
+                </a>
+              </li>
+              <li>
+                <a href="/transactions/import" class="nav-link {{if eq .CurrentRoute "/transactions/import"}}active{{else}}link-body-emphasis{{end}}">
+                  <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
+                  Importação
                 </a>
               </li>
               <li>

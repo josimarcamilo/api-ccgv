@@ -47,7 +47,8 @@
                             const formattedDate = date.toLocaleDateString('pt-BR', {
                                 day: '2-digit',
                                 month: '2-digit',
-                                year: 'numeric'
+                                year: 'numeric',
+                                timeZone: 'UTC'
                             });
                             return formattedDate;
                         }
@@ -62,7 +63,12 @@
                         }
                     },
                     {"data": "description"},
-                    {"data": "value"},
+                    {
+                        "data": "value",
+                        "render": function(data, type, row) {
+                            return data.toLocaleString('pt-br', {minimumFractionDigits: 2});
+                        }
+                    },
                     {"data": "category.name"},
                     {"data": "account.name"},
                     {

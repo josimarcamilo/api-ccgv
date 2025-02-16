@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"jc-financas/models"
@@ -8,7 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -509,6 +512,143 @@ func (h *CRUDHandler) CreateTransaction(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, newTransaction)
+}
+
+type TransactionOFX struct {
+	Type        string
+	Date        string
+	Amount      float64
+	FITID       string
+	CheckNum    string
+	Description string
+}
+
+func (h *CRUDHandler) ImportOFX(c echo.Context) error {
+	// Obter a sessão e o usuário logado
+	session, err := storeSessions.Get(c.Request(), "session-id")
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error":   "Sessão inválida",
+			"message": "Sessão inválida",
+		})
+	}
+	user, ok := session.Values["user"].(models.User)
+	if !ok || user.ID == 0 {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error":   "Usuário não autenticado",
+			"message": "Usuário não autenticado",
+		})
+	}
+
+	file, err := c.FormFile("file_ofx")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro",
+			"message": "Erro ao ler o arquivo",
+		})
+	}
+	src, err := file.Open()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao abrir o arquivo",
+			"message": err.Error(),
+		})
+	}
+	defer src.Close()
+	scanner := bufio.NewScanner(src)
+	transactions := []TransactionOFX{}
+	var current TransactionOFX
+	rgxDate := regexp.MustCompile(`\d{8}`)
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		if strings.HasPrefix(line, "<STMTTRN>") {
+			current = TransactionOFX{}
+		} else if strings.HasPrefix(line, "<TRNTYPE>") {
+			current.Type = strings.TrimPrefix(line, "<TRNTYPE>")
+		} else if strings.HasPrefix(line, "<DTPOSTED>") {
+			match := rgxDate.FindString(line)
+			if match != "" {
+				parsedDate, _ := time.Parse("20060102", match)
+				current.Date = parsedDate.Format("2006-01-02")
+			}
+		} else if strings.HasPrefix(line, "<TRNAMT>") {
+			amount, _ := strconv.ParseFloat(strings.TrimPrefix(line, "<TRNAMT>"), 64)
+			current.Amount = amount
+		} else if strings.HasPrefix(line, "<FITID>") {
+			current.FITID = strings.TrimPrefix(line, "<FITID>")
+		} else if strings.HasPrefix(line, "<CHECKNUM>") {
+			current.CheckNum = strings.TrimPrefix(line, "<CHECKNUM>")
+		} else if strings.HasPrefix(line, "<MEMO>") {
+			current.Description = strings.TrimPrefix(line, "<MEMO>")
+		} else if strings.HasPrefix(line, "</STMTTRN>") {
+			transactions = append(transactions, current)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao ler o arquivo",
+			"message": err.Error(),
+		})
+	}
+
+	fmt.Printf("%-10s %-12s %-10s %-15s %-10s %s\n", "Tipo", "Data", "Valor", "FITID", "Cheque", "Descrição")
+	fmt.Println(strings.Repeat("-", 70))
+	for _, tx := range transactions {
+		fmt.Printf("%-10s %-12s %-10.2f %-15s %-10s %s\n", tx.Type, tx.Date, tx.Amount, tx.FITID, tx.CheckNum, tx.Description)
+		record := models.Transaction{}
+		if err := h.DB.Where("team_id = ?", user.TeamID).Where("external_id = ?", tx.FITID).First(&record).Error; err != nil {
+			//criar
+			record.TeamID = user.TeamID
+			record.Date = tx.Date
+			record.Description = tx.Description
+			record.ExternalId = tx.FITID
+			record.Type = 1
+			record.Value = tx.Amount
+			if tx.Type == "DEBIT" {
+				record.Value = tx.Amount * -1
+				record.Type = 2
+			}
+
+			if err := h.DB.Create(&record).Error; err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{
+					"error":   "Erro ao salvar",
+					"message": "Erro ao salvar a transacao " + fmt.Sprintf("%.2f", tx.Amount),
+				})
+			}
+		}
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"error":   "false",
+		"message": "Arquivo OFX recebido com sucesso",
+	})
+
+	// for _, tx := range ofx.Bank.Transactions {
+	// 	value, err := strconv.ParseFloat(strings.TrimSpace(tx.Amount), 64)
+	// 	if err != nil {
+	// 		fmt.Println("Erro ao converter valor:", err)
+	// 		continue
+	// 	}
+
+	// 	date, err := time.Parse("20060102", strings.TrimSpace(tx.Date))
+	// 	if err != nil {
+	// 		fmt.Println("Erro ao converter data:", err)
+	// 		continue
+	// 	}
+
+	// 	transaction := Transaction{
+	// 		Date:        date.Format("2006-01-02"),
+	// 		Type:        2,
+	// 		Description: strings.TrimSpace(tx.Description),
+	// 		Value:       value,
+	// 		CategoryID:  1,
+	// 		AccountID:   1,
+	// 	}
+	// 	db.Create(&transaction)
+	// }
 }
 
 func (h *CRUDHandler) ListTransactions(c echo.Context) error {

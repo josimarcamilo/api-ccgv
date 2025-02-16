@@ -19,13 +19,15 @@ Contas para criar:
 # Transações
 - [x] colocar comprovante nas receitas como opicional
 - [] editar uma transacao
+- [] excluir uma transacao
 - [] importar planilha
-- [] importar ofx
+- [x] importar ofx
 
 # Fiscal
 - [] recurso para aprovar/reprovar uma transacao (talvez na tela de visualizar já resolva). Colocar observacao (opicional)
 
 # Relatórios
+- [] Mapa Mensal
 - [] relatorio de despesas e receitas por categia de um periodo de data
 
 # Cadatro de diretoria

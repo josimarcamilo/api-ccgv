@@ -249,6 +249,8 @@ func main() {
 	e.GET("/transactions/:id", transactionHandler.GetByID)
 	e.PUT("/transactions/:id", transactionHandler.Update)
 	e.DELETE("/transactions/:id", transactionHandler.Delete)
+	e.GET("/transactions/import", ImportTransaction)
+	e.POST("/transactions/import-ofx", transactionHandler.ImportOFX)
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
@@ -280,8 +282,7 @@ func GetCrudConfig(c echo.Context) error {
 			"apiUrlCategories":  "http://localhost:8000/categories?toselect=true",
 			"apiUrlAccounts":    "http://localhost:8000/accounts?toselect=true",
 			"apiUrlTransaction": "http://localhost:8000/transactions",
-			"apiUrlExit":        "http://localhost:8000/accounts",
-			"apiUrlTransfer":    "http://localhost:8000/accounts",
+			"apiUrlImportOfx":   "http://localhost:8000/transactions/import-ofx",
 		},
 		"accounts": map[string]interface{}{
 			"entity":        "accounts",
@@ -355,6 +356,18 @@ func CreateTransaction(c echo.Context) error {
 	return c.Render(http.StatusOK, "transactions-create", map[string]interface{}{
 		"Entity":       "transactions",
 		"CurrentRoute": "/transactions/create",
+	})
+}
+
+func ImportTransaction(c echo.Context) error {
+	err := VerifySession(c)
+	if err != nil {
+		return err
+	}
+
+	return c.Render(http.StatusOK, "transactions-import", map[string]interface{}{
+		"Entity":       "transactions",
+		"CurrentRoute": "/transactions/import",
 	})
 }
 
