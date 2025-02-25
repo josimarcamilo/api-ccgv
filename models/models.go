@@ -75,6 +75,7 @@ type Transaction struct {
 	Account           Account        `gorm:"foreignKey:AccountID" json:"account"`
 	Proof             *string        `json:"proof" form:"proof"`
 	TransactionOrigin *uint          `gorm:"null" json:"transaction_origin"`
+	Transfer          bool           `gorm:"not null;default:false" form:"transfer" json:"transfer"`
 	ExternalId        string         `gorm:"null;index:idx_external_id" json:"external_id" form:"external_id"`
 	CreatedAt         time.Time      `json:"created_at"`
 	UpdatedAt         time.Time      `json:"updated_at"`

@@ -495,6 +495,7 @@ func (h *CRUDHandler) CreateTransaction(c echo.Context) error {
 		transactionDestination.TeamID = newTransaction.TeamID
 		transactionDestination.Date = newTransaction.Date
 		transactionDestination.Type = 1
+		transactionDestination.Transfer = true
 		transactionDestination.Description = newTransaction.Description
 		transactionDestination.CategoryID = newTransaction.CategoryID
 		transactionDestination.AccountID = accDestination
