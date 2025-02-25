@@ -251,6 +251,7 @@ func main() {
 	e.DELETE("/transactions/:id", transactionHandler.Delete)
 	e.GET("/transactions/import", ImportTransaction)
 	e.POST("/transactions/import-ofx", transactionHandler.ImportOFX)
+	e.POST("/transactions/import-csv", transactionHandler.ImportCSV)
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
@@ -283,6 +284,7 @@ func GetCrudConfig(c echo.Context) error {
 			"apiUrlAccounts":    "http://localhost:8000/accounts?toselect=true",
 			"apiUrlTransaction": "http://localhost:8000/transactions",
 			"apiUrlImportOfx":   "http://localhost:8000/transactions/import-ofx",
+			"apiUrlImportCsv":   "http://localhost:8000/transactions/import-csv",
 		},
 		"accounts": map[string]interface{}{
 			"entity":        "accounts",

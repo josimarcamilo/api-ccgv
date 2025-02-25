@@ -24,11 +24,11 @@
     <div class="row mt-5">
         <div class="col">
             <form id="form-import-excel" class="row g-3">
-                <h3 class="mt-3">Importar Planilha Excel</h3>
+                <h3 class="mt-3">Importar Csv</h3>
                 <div class="row">
                     <div class="col-12">
-                        <label for="inputFileExit" class="form-label">Selecione a planilha no modelo indicado</label>
-                        <input type="file" name="proof" class="form-control" id="inputFileExit" required>
+                        <label for="inputFileExit" class="form-label">Separe as colunas com ; e deixe o cabeçalho na linha 7 e formatação usando ponto para casas decimais. Formato de data yyyy-mm-dd</label>
+                        <input type="file" name="file_csv" accept=".csv" class="form-control" id="inputFileExit" required>
                     </div>
                 </div>
                 <div class="row">
@@ -47,23 +47,32 @@
             // Carregar configuração do backend
             const configResponse = await fetch(`/crud-config/transactionscreate`);
             const config = await configResponse.json();
-            console.log(config)
-
+            
             const formImportOfx = document.getElementById("form-import-ofx");
+            const formImportCsv = document.getElementById("form-import-excel");
 
             formImportOfx.addEventListener("submit", async (e) => {
                 e.preventDefault();
 
                 const formData = new FormData(formImportOfx);
-                store(formData)
+                store(formData, config.apiUrlImportOfx)
                 console.log("fim submit")
                 formImportOfx.reset();
             });
 
+            formImportCsv.addEventListener("submit", async (e) => {
+                e.preventDefault();
 
-            async function store(formData){
+                const formData = new FormData(formImportCsv);
+                store(formData, config.apiUrlImportCsv)
+                console.log("fim submit")
+                formImportCsv.reset();
+            });
+
+
+            async function store(formData, url){
                 console.log("store", formData)
-                res = await fetch(config.apiUrlImportOfx, {
+                res = await fetch(url, {
                     method: "POST",
                     body: formData,
                 });

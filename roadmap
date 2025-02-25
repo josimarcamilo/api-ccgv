@@ -6,6 +6,7 @@
 - [] exluir categoria
 
 # Contas
+- [] saldo inicial do banco ou caixa (verificar de qual conta foi paga) deve desconsiderar a décima do mes anterior
 - [x] editar conta
 - [x] calcular saldo das contas de acordo com uma data
 - [x] escolher se a conta vai ser "A receber" (conta desconsiderada nas somas)
@@ -18,16 +19,22 @@ Contas para criar:
 
 # Transações
 - [x] colocar comprovante nas receitas como opicional
-- [] editar uma transacao
+- [] editar uma transacao (marcar como transferencia, marcar para nao considerar no mapa)
 - [] excluir uma transacao
-- [] importar planilha
+- [x] importar planilha
 - [x] importar ofx
+- [] escolher a conta para criar as transacoes ao importar os arquivos
+- [] marcar transacao para nao considerar no mapa (exemplo é décima)
+- [] marcar transacao como transferencia (exemplo saque do banco para caixa)
+- [] criar padrao de descricoes
 
-# Fiscal
-- [] recurso para aprovar/reprovar uma transacao (talvez na tela de visualizar já resolva). Colocar observacao (opicional)
+# Tesoureiros e Conselho Fiscal
+- [] recurso para aprovar/reprovar uma transacao (talvez na tela de visualizar já resolva). Colocar observacao caso reprove
+Acho que a transacao pode ter um status (criada, correcao, revisao, aprovada), salvar o histórico de mudança de status e o usuário que mudou.
+De correcao só pode ir para revisao
 
 # Relatórios
-- [] Mapa Mensal
+- [] Mapa Mensal (calculado)
 - [] relatorio de despesas e receitas por categia de um periodo de data
 
 # Cadatro de diretoria

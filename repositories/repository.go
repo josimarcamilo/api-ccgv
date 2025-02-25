@@ -2,8 +2,10 @@ package repositories
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"io"
+	"jc-financas/helpers"
 	"jc-financas/models"
 	"net/http"
 	"os"
@@ -17,6 +19,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
+	"github.com/olekukonko/tablewriter"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -626,30 +629,142 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 		"error":   "false",
 		"message": "Arquivo OFX recebido com sucesso",
 	})
+}
 
-	// for _, tx := range ofx.Bank.Transactions {
-	// 	value, err := strconv.ParseFloat(strings.TrimSpace(tx.Amount), 64)
-	// 	if err != nil {
-	// 		fmt.Println("Erro ao converter valor:", err)
-	// 		continue
-	// 	}
+func (h *CRUDHandler) ImportCSV(c echo.Context) error {
+	// Obter a sessão e o usuário logado
+	session, err := storeSessions.Get(c.Request(), "session-id")
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error":   "Sessão inválida",
+			"message": "Sessão inválida",
+		})
+	}
+	user, ok := session.Values["user"].(models.User)
+	if !ok || user.ID == 0 {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error":   "Usuário não autenticado",
+			"message": "Usuário não autenticado",
+		})
+	}
 
-	// 	date, err := time.Parse("20060102", strings.TrimSpace(tx.Date))
-	// 	if err != nil {
-	// 		fmt.Println("Erro ao converter data:", err)
-	// 		continue
-	// 	}
+	file, err := c.FormFile("file_csv")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro",
+			"message": "Erro ao ler o arquivo",
+		})
+	}
+	src, err := file.Open()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao abrir o arquivo",
+			"message": err.Error(),
+		})
+	}
+	defer src.Close()
 
-	// 	transaction := Transaction{
-	// 		Date:        date.Format("2006-01-02"),
-	// 		Type:        2,
-	// 		Description: strings.TrimSpace(tx.Description),
-	// 		Value:       value,
-	// 		CategoryID:  1,
-	// 		AccountID:   1,
-	// 	}
-	// 	db.Create(&transaction)
-	// }
+	// Criar um arquivo temporário para leitura
+	tempFile, err := os.CreateTemp("", "upload-*.csv")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro",
+			"message": err.Error(),
+		})
+	}
+	defer os.Remove(tempFile.Name())
+
+	_, err = tempFile.ReadFrom(src)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao salvar arquivo temporário",
+			"message": err.Error(),
+		})
+	}
+	tempFile.Close()
+
+	// Abrir e ler o arquivo CSV
+	csvFile, err := os.Open(tempFile.Name())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao ler o arquivo CSV",
+			"message": err.Error(),
+		})
+	}
+	defer csvFile.Close()
+
+	reader := csv.NewReader(csvFile)
+	reader.FieldsPerRecord = -1 // Permite linhas com números diferentes de colunas
+	reader.Comma = ';'          // Define o delimitador correto
+
+	rows, err := reader.ReadAll()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao processar o arquivo CSV",
+			"message": err.Error(),
+		})
+	}
+
+	// Criar uma tabela formatada no console
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"DATA", "HISTÓRICO", "ENTRADA", "SAÍDA", "SALDO"})
+
+	const COLUMN_DATE = 0
+	const COLUMN_DESCRIPTION = 1
+	const COLUMN_ENTRY = 2
+	const COLUMN_EXIT = 3
+	// Ler os dados a partir da linha 7 e exibir na tabela
+	for i, row := range rows {
+		if i <= 6 {
+			continue // Pular cabeçalhos até a linha 7
+		}
+		if len(row) < 5 {
+			continue // Garantir que há colunas suficientes
+		}
+		table.Append(row[:5])
+
+		if row[COLUMN_ENTRY] == "" && row[COLUMN_EXIT] == "" {
+			continue
+		}
+
+		record := models.Transaction{}
+		record.TeamID = user.TeamID
+		record.Date = row[COLUMN_DATE]
+		record.Description = row[COLUMN_DESCRIPTION]
+		if row[COLUMN_ENTRY] != "" {
+			record.Type = 1
+			record.Value, err = helpers.OnlyNumbers(row[COLUMN_ENTRY])
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{
+					"error":   "Erro OnlyNumbers",
+					"message": err.Error(),
+				})
+			}
+		}
+		if row[COLUMN_EXIT] != "" {
+			record.Type = 2
+			record.Value, err = helpers.OnlyNumbers(row[COLUMN_EXIT])
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{
+					"error":   "Erro OnlyNumbers",
+					"message": err.Error(),
+				})
+			}
+		}
+
+		if err := h.DB.Create(&record).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error":   "Erro ao salvar a transacao",
+				"message": err.Error(),
+			})
+		}
+	}
+	table.Render()
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"error":   "false",
+		"message": "Arquivo CSV recebido com sucesso",
+	})
 }
 
 func (h *CRUDHandler) ListTransactions(c echo.Context) error {
