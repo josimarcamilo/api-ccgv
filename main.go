@@ -65,11 +65,21 @@ func main() {
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{
 			"http://localhost:8000",
-			"https://app.orfed.com.br/",
+			"https://app.orfed.com.br",
 		},
-		AllowMethods:     []string{echo.GET, echo.POST, echo.PUT, echo.DELETE},
+		AllowMethods:     []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+		AllowHeaders:     []string{"Authorization", "Content-Type"},
 		AllowCredentials: true, // Necessário para cookies
 	}))
+
+	// Lida manualmente com OPTIONS caso necessário
+	e.OPTIONS("/*", func(c echo.Context) error {
+		c.Response().Header().Set("Access-Control-Allow-Origin", "https://app.orfed.com.br")
+		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Response().Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
+		return c.NoContent(204)
+	})
 
 	e.Static("/static", "static")
 
