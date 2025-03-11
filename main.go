@@ -8,6 +8,7 @@ import (
 	"jc-financas/repositories"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/sessions"
 	// "github.com/labstack/echo/middleware"
@@ -253,7 +254,11 @@ func main() {
 	e.POST("/transactions/import-ofx", transactionHandler.ImportOFX)
 	e.POST("/transactions/import-csv", transactionHandler.ImportCSV)
 
-	e.Logger.Fatal(e.Start(":8000"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000" // Porta padrão para desenvolvimento local
+	}
+	e.Logger.Fatal(e.Start(":" + port))
 }
 
 func GetCrudConfig(c echo.Context) error {
