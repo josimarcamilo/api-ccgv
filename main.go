@@ -63,7 +63,10 @@ func main() {
 	e.Renderer = t
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:8000", "http://seu-site.com"}, // Substitua pelo domínio correto
+		AllowOrigins: []string{
+			"http://localhost:8000",
+			"https://app.orfed.com.br/",
+		},
 		AllowMethods:     []string{echo.GET, echo.POST, echo.PUT, echo.DELETE},
 		AllowCredentials: true, // Necessário para cookies
 	}))
