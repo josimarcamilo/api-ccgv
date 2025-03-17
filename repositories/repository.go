@@ -264,11 +264,11 @@ func (h *CRUDHandler) ListCategories(c echo.Context) error {
 	if !ok || user.ID == 0 {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
 	}
-	toSelect := c.QueryParam("toselect")
-	if toSelect != "" {
+
+	if true {
 		var records []models.Category
 		if err := h.DB.
-			Where("team_id = ?", user.TeamID).Order("id ASC").Find(&records).Error; err != nil {
+			Where("team_id = ?", user.TeamID).Order("name ASC").Find(&records).Error; err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{
 				"error":   "Erro ao buscar registros para select",
 				"message": err.Error(),
