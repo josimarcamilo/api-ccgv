@@ -804,12 +804,12 @@ func (h *CRUDHandler) ListTransactions(c echo.Context) error {
 	}
 
 	// Parâmetros do DataTables
-	start, _ := strconv.Atoi(c.QueryParam("start"))
-	length, _ := strconv.Atoi(c.QueryParam("length"))
-	search := c.QueryParam("search[value]")
+	// start, _ := strconv.Atoi(c.QueryParam("start"))
+	// length, _ := strconv.Atoi(c.QueryParam("length"))
+	// search := c.QueryParam("search[value]")
 
-	// Definir ordenação padrão
-	orderBy := "date DESC"
+	// // Definir ordenação padrão
+	// orderBy := "date DESC"
 
 	// orderColumn := c.QueryParam("order[0][column]") // Índice da coluna
 	// orderDir := c.QueryParam("order[0][dir]")       // Direção (asc ou desc)
@@ -828,43 +828,45 @@ func (h *CRUDHandler) ListTransactions(c echo.Context) error {
 		Where("team_id = ?", user.TeamID)
 
 	// Aplicar filtro de pesquisa
-	if search != "" {
-		query = query.Where("description LIKE ? OR amount::text LIKE ?", "%"+search+"%", "%"+search+"%")
-	}
+	// if search != "" {
+	// 	query = query.Where("description LIKE ? OR amount::text LIKE ?", "%"+search+"%", "%"+search+"%")
+	// }
 
 	// Aplicar paginação e ordenação
 	var transactions []models.Transaction
-	if err := query.Order(orderBy).Offset(start).Limit(length).Find(&transactions).Error; err != nil {
+	if err := query.Limit(100).Find(&transactions).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao buscar registros"})
 	}
 
+	return c.JSON(http.StatusOK, transactions)
+
 	// Contar total de registros sem filtros
-	var totalRecords int64
-	h.DB.Model(&models.Transaction{}).Where("team_id = ?", user.TeamID).Count(&totalRecords)
+	// var totalRecords int64
+	// h.DB.Model(&models.Transaction{}).Where("team_id = ?", user.TeamID).Count(&totalRecords)
 
 	// Contar total de registros filtrados
-	totalFiltered := totalRecords
+	// totalFiltered := totalRecords
 
 	// Prefixo do arquivo
-	baseURL := "http://localhost:8000/"
+	// baseURL := "http://localhost:8000/"
 
-	// Adicionando o prefixo ao proof
-	for i := range transactions {
-		if transactions[i].Proof != nil && *transactions[i].Proof != "" {
-			newPath := baseURL + *transactions[i].Proof
-			transactions[i].Proof = &newPath // Atualiza o ponteiro
-		}
-	}
+	// // Adicionando o prefixo ao proof
+	// for i := range transactions {
+	// 	if transactions[i].Proof != nil && *transactions[i].Proof != "" {
+	// 		newPath := baseURL + *transactions[i].Proof
+	// 		transactions[i].Proof = &newPath // Atualiza o ponteiro
+	// 	}
+	// }
 
-	// Retornar resposta no formato esperado pelo DataTables
-	response := map[string]interface{}{
-		"draw":            c.QueryParam("draw"),
-		"recordsTotal":    totalRecords,
-		"recordsFiltered": totalFiltered,
-		"data":            transactions,
-	}
+	// // Retornar resposta no formato esperado pelo DataTables
+	// response := map[string]interface{}{
+	// 	"draw":            c.QueryParam("draw"),
+	// 	"recordsTotal":    totalRecords,
+	// 	"recordsFiltered": totalFiltered,
+	// 	"data":            transactions,
+	// }
 
-	return c.JSON(http.StatusOK, response)
+	// return c.JSON(http.StatusOK, response)
 }
 
 func (h *CRUDHandler) ListUsers(c echo.Context) error {
