@@ -132,7 +132,7 @@ func main() {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"erro ao salvar sessao": err.Error()})
 		}
 
-		return c.Redirect(http.StatusSeeOther, "/home")
+		return c.JSON(http.StatusOK, user.Email)
 	})
 
 	e.GET("/profile", func(c echo.Context) error {
@@ -492,12 +492,12 @@ func TeamCreate(c echo.Context) error {
 func AccountList(c echo.Context) error {
 	session, err := storeSessions.Get(c.Request(), "session-id")
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/login")
+		return c.JSON(http.StatusUnauthorized, "session expired")
 	}
 	// Obter o user_id da sessão
 	userID, ok := session.Values["userID"].(uint)
 	if !ok || userID == 0 {
-		return c.Redirect(http.StatusSeeOther, "/login")
+		return c.JSON(http.StatusUnauthorized, "session expired")
 	}
 	return c.Render(http.StatusOK, "account-list", "World")
 }
@@ -505,12 +505,12 @@ func AccountList(c echo.Context) error {
 func VerifySession(c echo.Context) error {
 	session, err := storeSessions.Get(c.Request(), "session-id")
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/login")
+		return c.JSON(http.StatusUnauthorized, "session expired")
 	}
 
 	user, ok := session.Values["user"].(models.User)
 	if !ok || user.ID == 0 {
-		return c.Redirect(http.StatusSeeOther, "/login")
+		return c.JSON(http.StatusUnauthorized, "session expired")
 	}
 
 	return nil
