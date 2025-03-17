@@ -526,6 +526,10 @@ type TransactionOFX struct {
 	Description string
 }
 
+type AccountImport struct {
+	AccountID uint `json:"account_id" form:"account_id"`
+}
+
 func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 	// Obter a sessão e o usuário logado
 	session, err := storeSessions.Get(c.Request(), "session-id")
@@ -599,6 +603,15 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 
 	fmt.Printf("%-10s %-12s %-10s %-15s %-10s %s\n", "Tipo", "Data", "Valor", "FITID", "Cheque", "Descrição")
 	fmt.Println(strings.Repeat("-", 70))
+
+	accountImport := AccountImport{}
+	if err := c.Bind(&accountImport); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro bind da conta",
+			"message": err.Error(),
+		})
+	}
+
 	for _, tx := range transactions {
 		fmt.Printf("%-10s %-12s %-10.2f %-15s %-10s %s\n", tx.Type, tx.Date, tx.Amount, tx.FITID, tx.CheckNum, tx.Description)
 		record := models.Transaction{}
@@ -610,6 +623,8 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 			record.ExternalId = tx.FITID
 			record.Type = 1
 			record.Value = tx.Amount
+			record.AccountID = accountImport.AccountID
+
 			if tx.Type == "DEBIT" {
 				record.Value = tx.Amount * -1
 				record.Type = 2
@@ -726,10 +741,20 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 			continue
 		}
 
+		accountImport := AccountImport{}
+		if err := c.Bind(&accountImport); err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error":   "Erro bind da conta",
+				"message": err.Error(),
+			})
+		}
+
 		record := models.Transaction{}
 		record.TeamID = user.TeamID
 		record.Date = row[COLUMN_DATE]
 		record.Description = row[COLUMN_DESCRIPTION]
+		record.AccountID = accountImport.AccountID
+
 		if row[COLUMN_ENTRY] != "" {
 			record.Type = 1
 			record.Value, err = helpers.OnlyNumbers(row[COLUMN_ENTRY])
