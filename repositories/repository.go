@@ -335,8 +335,7 @@ func (h *CRUDHandler) ListAccounts(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
 	}
 
-	toSelect := c.QueryParam("toselect")
-	if toSelect != "" {
+	if true {
 		var records []models.Account
 		if err := h.DB.
 			Where("team_id = ?", user.TeamID).Order("name ASC").Find(&records).Error; err != nil {
