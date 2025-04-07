@@ -1,3 +1,18 @@
+# V1
+## Funcionalidades
+- [] se registrar no sistema
+- [] cadastrar usuários no time
+## Financeiro
+- [] cadastrar contas contábeis
+- [] cadastrar categorias
+- [] criar lançamentos para as contas
+## relatórios
+- [] receitas por categoria
+- [] despesas por categoria
+- [] saldo das contas
+- [] extrato de conta
+
+# V2
 # Usuário
 - [x] cadastro de usuários no time
 
