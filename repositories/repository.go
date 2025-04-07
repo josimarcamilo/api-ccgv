@@ -48,7 +48,7 @@ func (h *CRUDHandler) Register(c echo.Context) error {
 
 	// Validações simples
 	if user.Name == "" || user.Email == "" || user.Password == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Nome, email e senha são obrigatórios"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Name, email e senha são obrigatórios"})
 	}
 
 	// Encriptar a senha
@@ -86,15 +86,7 @@ func (h *CRUDHandler) Register(c echo.Context) error {
 	}
 
 	user.TeamID = defaultTeam.ID
-
-	if err := salvaSessao(c, user); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error":   "Erro ao salvar a sessao",
-			"message": err.Error(),
-		})
-	}
-	// return c.JSON(http.StatusCreated, user)
-	return c.Redirect(http.StatusSeeOther, "/home")
+	return c.JSON(http.StatusCreated, user)
 }
 
 func salvaSessao(c echo.Context, user models.User) error {

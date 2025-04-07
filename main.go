@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"html/template"
 	"io"
+	"jc-financas/controllers"
 	"jc-financas/models"
 	"jc-financas/repositories"
 	"log"
@@ -14,7 +15,6 @@ import (
 	// "github.com/labstack/echo/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -43,6 +43,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
 	}
+	repositories.DB = db
 
 	// Migrar o modelo para o banco de dados
 	if err := db.AutoMigrate(
@@ -83,57 +84,17 @@ func main() {
 
 	e.Static("/static", "static")
 
+	userHandler := repositories.CRUDHandler{DB: db, Model: &models.User{}, TableName: "users"}
+	e.POST("/register", userHandler.Register)
+	e.POST("/login", controllers.Login)
+
 	e.GET("/", func(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/home")
 	})
 	e.GET("/login", Login)
 	e.GET("/register", Register)
 
-	userHandler := repositories.CRUDHandler{DB: db, Model: &models.User{}, TableName: "users"}
-
-	e.POST("/register", userHandler.Register)
-
 	e.GET("/home", Home)
-
-	e.POST("/login", func(c echo.Context) error {
-		type LoginRequest struct {
-			Email    string `json:"email" form:"email"`
-			Password string `json:"password" form:"password"`
-		}
-
-		var loginRequest LoginRequest
-		if err := c.Bind(&loginRequest); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})
-		}
-
-		// Verificar se o e-mail e senha foram fornecidos
-		if loginRequest.Email == "" || loginRequest.Password == "" {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email e senha são obrigatórios"})
-		}
-
-		// Buscar o usuário pelo e-mail
-		var user models.User
-		if err := db.Where("email = ?", loginRequest.Email).First(&user).Error; err != nil {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Credenciais inválidas"})
-		}
-
-		// Comparar a senha fornecida com o hash armazenado
-		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password)); err != nil {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Credenciais inválidas"})
-		}
-
-		// Criar uma nova sessão
-		session, _ := storeSessions.Get(c.Request(), "session-id")
-		session.Values["user"] = user
-		session.Save(c.Request(), c.Response())
-
-		err = session.Save(c.Request(), c.Response())
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"erro ao salvar sessao": err.Error()})
-		}
-
-		return c.JSON(http.StatusOK, user.Email)
-	})
 
 	e.GET("/profile", func(c echo.Context) error {
 		session, err := storeSessions.Get(c.Request(), "session-id")
