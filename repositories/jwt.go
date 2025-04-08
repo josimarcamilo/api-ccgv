@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"jc-financas/models"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -31,7 +30,8 @@ func GenerateJWT(user models.User) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	jwtSecret := os.Getenv("JWT_SECRET")
+	// jwtSecret := os.Getenv("JWT_SECRET")
+	jwtSecret := "a2tra2s="
 
 	hmacSampleSecret := []byte(jwtSecret)
 
@@ -39,4 +39,26 @@ func GenerateJWT(user models.User) (string, error) {
 	tokenString, err := token.SignedString(hmacSampleSecret)
 
 	return tokenString, err
+}
+
+func Parse(stringToken string) (MyCustomClaims, error) {
+	claims := MyCustomClaims{}
+
+	jwtSecret := "a2tra2s="
+
+	hmacSampleSecret := []byte(jwtSecret)
+
+	token, err := jwt.ParseWithClaims(stringToken, &claims, func(token *jwt.Token) (interface{}, error) {
+		return hmacSampleSecret, nil
+	})
+
+	if err != nil {
+		return claims, err
+	}
+
+	if !token.Valid {
+		return claims, err
+	}
+
+	return claims, nil
 }
