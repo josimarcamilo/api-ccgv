@@ -1,13 +1,18 @@
 meta {
-  name: criar categoria
+  name: listar categorias
   type: http
-  seq: 2
+  seq: 1
 }
 
-post {
+get {
   url: {{host}}/categories
-  body: json
+  body: none
   auth: bearer
+}
+
+params:query {
+  ~use_map: 1
+  ~type: 2
 }
 
 auth:bearer {
@@ -16,8 +21,8 @@ auth:bearer {
 
 body:json {
   {
-    "name": "cat saidas",
-    "type": 2,
+    "name": "cat receita",
+    "type": 1,
     "use_map": true
   }
 }

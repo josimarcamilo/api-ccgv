@@ -1,0 +1,26 @@
+meta {
+  name: profile
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{host}}/profile
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "email": "jo@gmail.com",
+    "password": "jojojojoj"
+  }
+}
+
+vars:post-response {
+  token: res.body.token
+}

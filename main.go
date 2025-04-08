@@ -87,24 +87,11 @@ func main() {
 	e.Static("/static", "static")
 
 	userHandler := repositories.CRUDHandler{DB: db, Model: &models.User{}, TableName: "users"}
+	// user
 	e.POST("/register", userHandler.Register)
 	e.POST("/login", controllers.Login)
+	e.GET("/profile", controllers.Profile)
 	e.POST("/team/users", controllers.AddUserToTeam)
-
-	e.GET("/profile", func(c echo.Context) error {
-		session, err := storeSessions.Get(c.Request(), "session-id")
-
-		if err != nil {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
-		}
-		userLogged, ok := session.Values["user"]
-
-		if !ok {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Nao autenticado"})
-		}
-
-		return c.JSON(http.StatusOK, userLogged)
-	})
 
 	e.GET("/teams", func(c echo.Context) error {
 		var model []models.Team

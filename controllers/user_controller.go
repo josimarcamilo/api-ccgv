@@ -141,3 +141,14 @@ func AddUserToTeam(c echo.Context) error {
 		"password": newPassword,
 	})
 }
+
+func Profile(c echo.Context) error {
+	claims, err := repositories.ParseWithContext(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, claims)
+}
