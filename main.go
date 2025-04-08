@@ -91,14 +91,6 @@ func main() {
 	e.POST("/login", controllers.Login)
 	e.POST("/team/users", controllers.AddUserToTeam)
 
-	e.GET("/", func(c echo.Context) error {
-		return c.Redirect(http.StatusSeeOther, "/home")
-	})
-	e.GET("/login", Login)
-	e.GET("/register", Register)
-
-	e.GET("/home", Home)
-
 	e.GET("/profile", func(c echo.Context) error {
 		session, err := storeSessions.Get(c.Request(), "session-id")
 
@@ -114,16 +106,6 @@ func main() {
 		return c.JSON(http.StatusOK, userLogged)
 	})
 
-	e.GET("/logout", func(c echo.Context) error {
-		session, _ := storeSessions.Get(c.Request(), "session-id")
-		// Remover a chave da sessão
-		session.Values["userID"] = nil
-		session.Save(c.Request(), c.Response())
-
-		return c.JSON(http.StatusOK, map[string]string{"message": "Logout realizado com sucesso"})
-	})
-
-	e.GET("/teams/create", TeamCreate)
 	e.GET("/teams", func(c echo.Context) error {
 		var model []models.Team
 		// db.Preload("Users").Find(&model).Error;
@@ -131,59 +113,6 @@ func main() {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao buscar times"})
 		}
 		return c.JSON(http.StatusOK, model)
-	})
-	e.POST("/teams", func(c echo.Context) error {
-		// Obter a sessão
-		session, err := storeSessions.Get(c.Request(), "session-id")
-		if err != nil {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
-		}
-
-		// Obter o userID da sessão
-		user, ok := session.Values["user"].(models.User)
-		if !ok || user.ID == 0 {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
-		}
-
-		// Bind do nome do time
-		var requestBody struct {
-			Name string `json:"name" form:"name"`
-		}
-		if err := c.Bind(&requestBody); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})
-		}
-
-		if requestBody.Name == "" {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "O nome do time é obrigatório"})
-		}
-
-		// Criar o time
-		team := models.Team{
-			Name:   requestBody.Name,
-			UserID: user.ID,
-		}
-		if err := db.Create(&team).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao criar o time"})
-		}
-
-		// Atualizar o team_id do usuário logado
-		if err := db.Model(&models.User{}).Where("id = ?", user.ID).Update("team_id", team.ID).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao associar o time ao usuário"})
-		}
-
-		user.TeamID = team.ID
-		session.Values["user"] = user
-		session.Save(c.Request(), c.Response())
-
-		err = session.Save(c.Request(), c.Response())
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error atualizar sessao": err.Error()})
-		}
-
-		return c.JSON(http.StatusCreated, map[string]interface{}{
-			"message": "Time criado com sucesso",
-			"team":    team,
-		})
 	})
 
 	e.GET("/crud-config/:entity", GetCrudConfig)
@@ -193,7 +122,6 @@ func main() {
 	accountHandler := repositories.CRUDHandler{DB: db, Model: &models.Account{}, TableName: "accounts"}
 	transactionHandler := repositories.CRUDHandler{DB: db, Model: &models.Transaction{}, TableName: "transactions"}
 
-	// Registrar rotas
 	e.POST("/categories", categoryHandler.CreateCategory)
 	e.GET("/categories", categoryHandler.ListCategories)
 	e.GET("/categories/edit/:id", FormCategoryEdit)

@@ -1,0 +1,28 @@
+meta {
+  name: criar categoria
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/categories
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "cat receita",
+    "type": 1,
+    "use_map": true
+  }
+}
+
+docs {
+  1 - Entrada
+  2 - Saída
+}

@@ -2,9 +2,12 @@ package repositories
 
 import (
 	"jc-financas/models"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
 )
 
 type MyCustomClaims struct {
@@ -61,4 +64,19 @@ func Parse(stringToken string) (MyCustomClaims, error) {
 	}
 
 	return claims, nil
+}
+
+func ParseWithContext(c echo.Context) (*MyCustomClaims, error) {
+	authHeader := c.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		return nil, errors.New("Token não fornecido")
+	}
+
+	claims, err := Parse(strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer")))
+	if err != nil {
+
+		return nil, errors.New("Token inválido")
+	}
+
+	return &claims, nil
 }

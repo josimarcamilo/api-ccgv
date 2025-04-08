@@ -4,7 +4,6 @@ import (
 	"jc-financas/models"
 	"jc-financas/repositories"
 	"net/http"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
@@ -64,18 +63,11 @@ func Login(c echo.Context) error {
 }
 
 func AddUserToTeam(c echo.Context) error {
-	authHeader := c.Request().Header.Get("Authorization")
-	if authHeader == "" {
-		return c.JSON(http.StatusUnauthorized, map[string]string{
-			"error": "Token não fornecido",
-		})
-	}
 
-	claims, err := repositories.Parse(strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer")))
+	claims, err := repositories.ParseWithContext(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{
-			"error":   "Token inválido",
-			"message": err.Error(),
+			"error": err.Error(),
 		})
 	}
 

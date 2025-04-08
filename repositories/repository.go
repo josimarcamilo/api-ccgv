@@ -208,14 +208,11 @@ func (h *CRUDHandler) Delete(c echo.Context) error {
 }
 
 func (h *CRUDHandler) CreateCategory(c echo.Context) error {
-	// Obter a sessão e o usuário logado
-	session, err := storeSessions.Get(c.Request(), "session-id")
+	claims, err := ParseWithContext(c)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
-	}
-	user, ok := session.Values["user"].(models.User)
-	if !ok || user.ID == 0 {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": err.Error(),
+		})
 	}
 
 	// Criar a instância de Transaction
@@ -225,16 +222,18 @@ func (h *CRUDHandler) CreateCategory(c echo.Context) error {
 	}
 
 	// Validações simples
-	if model.Name == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "O nome da conta é obrigatório"})
+	if model.Name == "" || model.Type == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "name and type are required",
+		})
 	}
 
 	// Definir TeamID
-	model.TeamID = user.TeamID
+	model.TeamID = claims.TeamID
 
 	// Salvar o registro no banco
 	if err := h.DB.Create(&model).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao salvar"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao salvar categoria"})
 	}
 
 	return c.JSON(http.StatusCreated, model)

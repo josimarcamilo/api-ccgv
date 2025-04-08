@@ -3,9 +3,10 @@
 - [x] se registrar no sistema
 - [x] cadastrar usuários no time
 ## Financeiro
+- [x] cadastrar categorias
 - [] cadastrar contas contábeis
-- [] cadastrar categoriasaazxc
 - [] criar lançamentos para as contas
+- [] importar extrato e planilha
 ## relatórios
 - [] receitas por categoria
 - [] despesas por categoria
