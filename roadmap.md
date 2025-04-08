@@ -1,10 +1,10 @@
 # V1
 ## Funcionalidades
-- [] se registrar no sistema
-- [] cadastrar usuários no time
+- [x] se registrar no sistema
+- [x] cadastrar usuários no time
 ## Financeiro
 - [] cadastrar contas contábeis
-- [] cadastrar categorias
+- [] cadastrar categoriasaazxc
 - [] criar lançamentos para as contas
 ## relatórios
 - [] receitas por categoria

@@ -1,0 +1,22 @@
+meta {
+  name: add user to team
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/team/users
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "email": "teste2@gmail.com",
+    "name": "teste"
+  }
+}

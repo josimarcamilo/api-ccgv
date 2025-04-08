@@ -27,10 +27,6 @@ import (
 var storeSessions = sessions.NewCookieStore([]byte("xPjrXZsDfdlwlYzFcWZQZ92f6x9IuTkHp_m7KZTlPlg=")) // Defina uma chave secreta
 var DB *gorm.DB
 
-func CreateUser(model *models.User) error {
-	return DB.Create(model).Error
-}
-
 // CRUD Handler Genérico
 type CRUDHandler struct {
 	DB        *gorm.DB
@@ -59,7 +55,6 @@ func (h *CRUDHandler) Register(c echo.Context) error {
 
 	// Substituir a senha em texto puro pela senha encriptada
 	user.Password = string(hashedPassword)
-	user.Role = "admin"
 	// Salvar no banco de dados
 	if err := h.DB.Create(&user).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{

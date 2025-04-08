@@ -48,8 +48,10 @@ func main() {
 	// Migrar o modelo para o banco de dados
 	if err := db.AutoMigrate(
 		&models.User{},
-		&models.Account{},
 		&models.Team{},
+		&models.Role{},
+		&models.UserTeam{},
+		&models.Account{},
 		&models.Category{},
 		&models.Transaction{},
 	); err != nil {
@@ -87,6 +89,7 @@ func main() {
 	userHandler := repositories.CRUDHandler{DB: db, Model: &models.User{}, TableName: "users"}
 	e.POST("/register", userHandler.Register)
 	e.POST("/login", controllers.Login)
+	e.POST("/team/users", controllers.AddUserToTeam)
 
 	e.GET("/", func(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/home")

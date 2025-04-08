@@ -6,17 +6,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type Team struct {
-	ID         uint       `gorm:"primaryKey"`
-	Name       string     `gorm:"size:255;not null;"`
-	UserID     uint       `gorm:"index"`
-	Users      []User     `gorm:"foreignKey:TeamID"`
-	Categories []Category `gorm:"foreignKey:TeamID"`
-	Accounts   []Account  `gorm:"foreignKey:TeamID"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-}
-
 type Category struct {
 	ID        uint           `gorm:"primarykey" json:"id"`
 	Name      string         `gorm:"size:255;not null" form:"name" json:"name"`

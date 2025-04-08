@@ -4,6 +4,7 @@ import (
 	"jc-financas/models"
 	"jc-financas/repositories"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
@@ -59,5 +60,92 @@ func Login(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"token": token,
+	})
+}
+
+func AddUserToTeam(c echo.Context) error {
+	authHeader := c.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "Token não fornecido",
+		})
+	}
+
+	claims, err := repositories.Parse(strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer")))
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error":   "Token inválido",
+			"message": err.Error(),
+		})
+	}
+
+	// return c.JSON(http.StatusUnauthorized, claims)
+
+	type LoginRequest struct {
+		Name  string `json:"name" form:"name"`
+		Email string `json:"email" form:"email"`
+	}
+
+	var loginRequest LoginRequest
+	if err := c.Bind(&loginRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Dados inválidos",
+		})
+	}
+
+	if loginRequest.Email == "" || loginRequest.Name == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Email e nome obrigatório",
+		})
+	}
+
+	newPassword, err := repositories.GeneratePassword(10)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Erro ao gerar senha",
+		})
+	}
+
+	// Buscar o usuário pelo e-mail
+	var user models.User
+	repositories.DB.Where("email = ?", loginRequest.Email).First(&user)
+
+	if user.ID != 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Usuário já existe",
+		})
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Erro ao encriptar senha",
+		})
+	}
+
+	user.Password = string(hashedPassword)
+	user.Name = loginRequest.Name
+	user.Email = loginRequest.Email
+	user.TeamID = claims.TeamID
+
+	if err := repositories.CreateUser(&user); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao criar usuário",
+			"message": err.Error(),
+		})
+	}
+
+	// role 1 sudo, 2 usuario
+	err = repositories.CreateUserTeam(user.ID, claims.TeamID, 2)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao adicionar usuário ao time",
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusCreated, map[string]string{
+		"email":    user.Email,
+		"password": newPassword,
 	})
 }
