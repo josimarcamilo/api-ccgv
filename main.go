@@ -92,6 +92,7 @@ func main() {
 	e.POST("/login", controllers.Login)
 	e.GET("/profile", controllers.Profile)
 	e.POST("/team/users", controllers.AddUserToTeam)
+	e.GET("/team/users", controllers.ListUsersToTeam)
 
 	e.GET("/teams", func(c echo.Context) error {
 		var model []models.Team

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"jc-financas/models"
 	"jc-financas/repositories"
 	"net/http"
@@ -140,6 +141,47 @@ func AddUserToTeam(c echo.Context) error {
 		"email":    user.Email,
 		"password": newPassword,
 	})
+}
+
+func ListUsersToTeam(c echo.Context) error {
+	claims, err := repositories.ParseWithContext(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	query := repositories.DB.Table("users").
+		Where("team_id = ?", claims.TeamID)
+
+	columnOrder := c.QueryParam("column_order")
+	if columnOrder == "" {
+		columnOrder = "id"
+	}
+
+	columnSort := c.QueryParam("column_sort")
+	if columnSort == "" {
+		columnSort = "ASC"
+	}
+
+	type UserList struct {
+		ID        uint   `json:"id"`
+		Name      string `json:"name"`
+		Email     string `json:"email"`
+		TeamID    uint   `json:"team_id"`
+		CreatedAt string `json:"created_at"`
+	}
+
+	var records []UserList
+	order := fmt.Sprintf("%s %s", columnOrder, columnSort)
+	if err := query.Order(order).Find(&records).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao buscar registros",
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, records)
 }
 
 func Profile(c echo.Context) error {
