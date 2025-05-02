@@ -1,0 +1,21 @@
+meta {
+  name: get unidade
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/unidades/4
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "nome": "CCGV"
+  }
+}

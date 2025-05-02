@@ -1,0 +1,22 @@
+meta {
+  name: create unidade
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/unidades
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "nome": "CCGV",
+    "unidade_superior": null
+  }
+}

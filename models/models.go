@@ -12,32 +12,24 @@ type Category struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 	TeamID    uint           `gorm:"index" json:"team_id"` // FK para Time
-	Name      string         `gorm:"size:255;not null" form:"name" json:"name"`
 	Type      int8           `gorm:"null" json:"type"`
-	UseMap    bool           `gorm:"null;default:false" form:"use_map" json:"use_map"`
-}
-
-// categorias para estarem igual ao mapa mensal
-type CategoryMap struct {
-	ID        uint           `gorm:"primarykey" json:"id"`
 	Name      string         `gorm:"size:255;not null" form:"name" json:"name"`
-	TeamID    uint           `gorm:"index" json:"team_id"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+	UseMap    bool           `gorm:"null;default:false" form:"use_map" json:"use_map"`
 }
 
 type Account struct {
 	ID          uint           `gorm:"primarykey" json:"id"`
-	Name        string         `gorm:"size:255;not null" json:"name" form:"name"`
-	Balance     float64        `gorm:"type:decimal(10,2);not null;default:0" json:"balance,string"`
-	BalanceDate string         `json:"balance_date"`
-	TeamID      uint           `gorm:"index"` // FK para Time
-	ToReceive   bool           `gorm:"default:false" form:"to_receive" json:"to_receive"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+	TeamID      uint           `gorm:"index"` // FK para Time
+	Name        string         `gorm:"size:255;not null" json:"name" form:"name"`
+	Balance     float64        `gorm:"type:decimal(10,2);not null;default:0" json:"balance,string"`
+	BalanceDate string         `json:"balance_date"`
+	ToReceive   bool           `gorm:"default:false" form:"to_receive" json:"to_receive"` // analisar se vai precisar
 }
+
+// cadastrar orcamentos (posso criar uma rotina para cadastrar um para cada mes)
 
 type Transaction struct {
 	ID                uint           `gorm:"primarykey" json:"id"`
@@ -50,7 +42,6 @@ type Transaction struct {
 	CategoryID        uint           `gorm:"null" json:"category_id" form:"category_id"`
 	Category          Category       `gorm:"foreignKey:CategoryID" json:"category"`
 	CategoryMapID     uint           `gorm:"null" json:"category_map_id" form:"category_map_id"`
-	CategoryMap       CategoryMap    `gorm:"foreignKey:CategoryMapID" json:"category_map"`
 	Account           Account        `gorm:"foreignKey:AccountID" json:"account"`
 	Proof             *string        `json:"proof" form:"proof"`
 	TransactionOrigin *uint          `gorm:"null" json:"transaction_origin"`

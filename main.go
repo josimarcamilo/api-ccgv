@@ -47,6 +47,7 @@ func main() {
 
 	// Migrar o modelo para o banco de dados
 	if err := db.AutoMigrate(
+		&models.Unidade{},
 		&models.User{},
 		&models.Team{},
 		&models.Role{},
@@ -93,6 +94,10 @@ func main() {
 	e.GET("/profile", controllers.Profile)
 	e.POST("/team/users", controllers.AddUserToTeam)
 	e.GET("/team/users", controllers.ListUsersToTeam)
+
+	e.POST("/unidades", controllers.CreateUnidade)
+	e.GET("/unidades", controllers.ListUnidades)
+	e.GET("/unidades/:unidade", controllers.GetUnidade)
 
 	e.GET("/teams", func(c echo.Context) error {
 		var model []models.Team
