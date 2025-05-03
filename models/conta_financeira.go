@@ -13,7 +13,7 @@ type ContaFinanceira struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 	TeamID    uint           `gorm:"index"`
 	Nome      string         `json:"nome"`
-	UnidadeID uint           `gorm:"not null" json:"unidade_id"`
+	UnidadeID *uint          `gorm:"null" json:"unidade_id"`
 
 	Unidade Unidade `gorm:"foreignKey:UnidadeID" json:"-"`
 }
