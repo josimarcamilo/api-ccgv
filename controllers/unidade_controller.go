@@ -64,16 +64,57 @@ func GetUnidade(c echo.Context) error {
 		})
 	}
 
-	// search.TeamID = claims.TeamID
-
-	if err := repositories.GetUnidade(&search, claims.TeamID); err != nil {
+	find, err := repositories.GetUnidade(search.ID, claims.TeamID)
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error":   "Erro ao buscar unidade",
 			"message": err.Error(),
 		})
 	}
 
-	c.JSON(http.StatusOK, search)
+	c.JSON(http.StatusOK, find)
+	return nil
+}
+
+func UpdadeUnidade(c echo.Context) error {
+	claims, err := repositories.ParseWithContext(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	var search models.Unidade
+	// bind
+	if err := c.Bind(&search); err != nil {
+		return errors.Wrap(err, "bind request")
+	}
+
+	// validacao
+	if search.ID == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Unidade obrigatório",
+		})
+	}
+
+	find, err := repositories.GetUnidade(search.ID, claims.TeamID)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao buscar unidade",
+			"message": err.Error(),
+		})
+	}
+
+	find.Nome = search.Nome
+	if err := repositories.UpdateUnidade(find); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao atualizar unidade",
+			"message": err.Error(),
+		})
+	}
+
+	c.JSON(http.StatusOK, find)
 	return nil
 }
 

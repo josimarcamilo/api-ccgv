@@ -1,0 +1,21 @@
+meta {
+  name: update unidade
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{host}}/unidades/9
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "nome": "CCGV editado"
+  }
+}

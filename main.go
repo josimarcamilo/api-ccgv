@@ -68,8 +68,7 @@ func main() {
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{
-			"http://localhost:8000",
-			"https://app.orfed.com.br",
+			"*",
 		},
 		AllowMethods:     []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
@@ -78,7 +77,7 @@ func main() {
 
 	// Lida manualmente com OPTIONS caso necessário
 	e.OPTIONS("/*", func(c echo.Context) error {
-		c.Response().Header().Set("Access-Control-Allow-Origin", "https://app.orfed.com.br")
+		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
 		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Response().Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
@@ -98,6 +97,7 @@ func main() {
 	e.POST("/unidades", controllers.CreateUnidade)
 	e.GET("/unidades", controllers.ListUnidades)
 	e.GET("/unidades/:unidade", controllers.GetUnidade)
+	e.PUT("/unidades/:unidade", controllers.UpdadeUnidade)
 
 	e.GET("/teams", func(c echo.Context) error {
 		var model []models.Team
