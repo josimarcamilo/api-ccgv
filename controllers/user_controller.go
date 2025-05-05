@@ -40,7 +40,7 @@ func Login(c echo.Context) error {
 
 	// Buscar o usuário pelo e-mail
 	var user models.User
-	if err := repositories.DB.Where("email = ?", loginRequest.Email).First(&user).Error; err != nil {
+	if err := repositories.DB.Where("email = ?", loginRequest.Email).Preload("Team").First(&user).Error; err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Credenciais inválidas"})
 	}
 

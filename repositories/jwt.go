@@ -13,6 +13,7 @@ import (
 type MyCustomClaims struct {
 	TeamID    uint   `json:"teamId"`
 	UserID    uint   `json:"userId"`
+	TeamName  string `json:"teamName"`
 	UserEmail string `json:"userEmail"`
 	jwt.RegisteredClaims
 }
@@ -21,6 +22,7 @@ func GenerateJWT(user models.User) (string, error) {
 	claims := MyCustomClaims{
 		UserID:    user.ID,
 		TeamID:    user.TeamID,
+		TeamName:  user.Team.Name,
 		UserEmail: user.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			// A usual scenario is to set the expiration time relative to the current time
