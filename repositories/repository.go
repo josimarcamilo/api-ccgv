@@ -203,7 +203,6 @@ func (h *CRUDHandler) CreateCategory(c echo.Context) error {
 		})
 	}
 
-	// Criar a instância de Transaction
 	model := models.Category{}
 	if err := c.Bind(&model); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})

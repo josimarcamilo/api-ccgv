@@ -1,0 +1,21 @@
+meta {
+  name: get contas
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host}}/accounts
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "nome": "CCGV"
+  }
+}

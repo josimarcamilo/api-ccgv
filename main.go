@@ -99,47 +99,24 @@ func main() {
 	e.GET("/unidades/:unidade", controllers.GetUnidade)
 	e.PUT("/unidades/:unidade", controllers.UpdadeUnidade)
 
-	e.GET("/teams", func(c echo.Context) error {
-		var model []models.Team
-		// db.Preload("Users").Find(&model).Error;
-		if err := db.Find(&model).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao buscar times"})
-		}
-		return c.JSON(http.StatusOK, model)
-	})
-
-	e.GET("/crud-config/:entity", GetCrudConfig)
-	e.GET("/crud/:entity", Crud)
-
 	categoryHandler := repositories.CRUDHandler{DB: db, Model: &models.Category{}, TableName: "categories"}
 	accountHandler := repositories.CRUDHandler{DB: db, Model: &models.Account{}, TableName: "accounts"}
 	transactionHandler := repositories.CRUDHandler{DB: db, Model: &models.Transaction{}, TableName: "transactions"}
 
+	// contas
+	e.POST("/accounts", controllers.CreateAccount)
+	e.GET("/accounts", controllers.ListAccounts)
+	e.GET("/accounts/:account", controllers.GetAccount)
+	e.PUT("/accounts/:account", controllers.UpdadeAccount)
+	e.POST("/account-balance", accountHandler.GetAccountBalance)
+
+	// categorias
 	e.POST("/categories", categoryHandler.CreateCategory)
 	e.GET("/categories", categoryHandler.ListCategories)
 	e.GET("/categories/edit/:id", FormCategoryEdit)
 	e.GET("/categories/:id", categoryHandler.GetByID)
 	e.PUT("/categories/:id", categoryHandler.Update)
 	e.DELETE("/categories/:id", categoryHandler.Delete)
-
-	e.GET("/users/table", ListUsers)
-	e.POST("/users", userHandler.CreateUser)
-	e.GET("/users", userHandler.ListUsers)
-	// e.GET("/users/:id", userHandler.GetByID)
-	// e.PUT("/users/:id", userHandler.Update)
-	// e.DELETE("/users/:id", userHandler.Delete)
-
-	e.GET("/categories/table", ListCategories)
-
-	// contas
-	e.GET("/accounts/table", ListAccounts)
-	e.POST("/accounts", accountHandler.CreateAccount)
-	e.GET("/accounts", accountHandler.ListAccounts)
-	e.GET("/accounts/:id", accountHandler.GetByID)
-	e.PUT("/accounts/:id", accountHandler.UpdateAccount)
-	e.GET("/accounts/edit/:id", FormAccountEdit)
-	e.DELETE("/accounts/:id", accountHandler.Delete)
-	e.POST("/account-balance", accountHandler.GetAccountBalance)
 
 	e.GET("/transactions/create", CreateTransaction)
 	e.GET("/transactions/table", ListTransactions)

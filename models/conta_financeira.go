@@ -6,14 +6,14 @@ import (
 	"gorm.io/gorm"
 )
 
-type ContaFinanceira struct {
-	ID        uint `gorm:"primaryKey" param:"unidade"`
+type Account struct {
+	ID        uint `gorm:"primaryKey" param:"account"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-	TeamID    uint           `gorm:"index"`
-	Nome      string         `json:"nome"`
-	UnidadeID *uint          `gorm:"null" json:"unidade_id"`
+	DeletedAt gorm.DeletedAt `gorm:"index" `
+	TeamID    uint           `gorm:"index" `
+	Name      string
+	UnidadeID *uint `gorm:"null"`
 
-	Unidade Unidade `gorm:"foreignKey:UnidadeID" json:"-"`
+	Unidade Unidade `gorm:"foreignKey:UnidadeID"`
 }

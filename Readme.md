@@ -9,6 +9,10 @@ git push heroku main
 - Duocentésima Lar dos Velhinhos
 - Empréstimo
 
+# Contas financeiras
+- pode ser de instituicoes financeiras reais
+- pode ser para uso interno
+
 # Movimentacao Interna
 É uma movimentacao em uma unidade e nao altera o saldo das contas financeiras
 ## Estrutura da tabela
