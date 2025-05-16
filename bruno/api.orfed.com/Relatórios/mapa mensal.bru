@@ -1,0 +1,32 @@
+meta {
+  name: mapa mensal
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host}}/reports/monthly-map
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~end_date: 2025-05-16
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "cat receita",
+    "type": 1,
+    "use_map": true
+  }
+}
+
+docs {
+  1 - Entrada
+  2 - Saída
+}

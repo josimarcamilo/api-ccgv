@@ -1,0 +1,32 @@
+meta {
+  name: entradas e saídas por conta e categoria
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{host}}/reports/detailed-balance
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~end_date: 2025-05-16
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "cat receita",
+    "type": 1,
+    "use_map": true
+  }
+}
+
+docs {
+  1 - Entrada
+  2 - Saída
+}

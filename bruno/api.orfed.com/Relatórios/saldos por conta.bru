@@ -1,0 +1,32 @@
+meta {
+  name: saldos por conta
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/reports/balance
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~end_date: 2025-05-16
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "cat receita",
+    "type": 1,
+    "use_map": true
+  }
+}
+
+docs {
+  1 - Entrada
+  2 - Saída
+}
