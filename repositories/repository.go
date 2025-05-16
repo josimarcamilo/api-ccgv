@@ -4,19 +4,16 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
-	"io"
 	"jc-financas/helpers"
 	"jc-financas/models"
 	"net/http"
 	"os"
-	"path/filepath"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
 	"github.com/olekukonko/tablewriter"
@@ -355,101 +352,100 @@ func (h *CRUDHandler) CreateAccount(c echo.Context) error {
 	return c.JSON(http.StatusCreated, model)
 }
 
-func (h *CRUDHandler) CreateTransaction(c echo.Context) error {
-	// Obter a sessão e o usuário logado
-	session, err := storeSessions.Get(c.Request(), "session-id")
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
-	}
-	user, ok := session.Values["user"].(models.User)
-	if !ok || user.ID == 0 {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
-	}
+// func (h *CRUDHandler) CreateTransaction(c echo.Context) error {
+// 	// Obter a sessão e o usuário logado
+// 	session, err := storeSessions.Get(c.Request(), "session-id")
+// 	if err != nil {
+// 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sessão inválida"})
+// 	}
+// 	user, ok := session.Values["user"].(models.User)
+// 	if !ok || user.ID == 0 {
+// 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Usuário não autenticado"})
+// 	}
 
-	newTransaction := models.Transaction{}
-	newTransaction.TeamID = user.TeamID
+// 	newTransaction := models.Transaction{}
+// 	newTransaction.TeamID = user.TeamID
 
-	typeParam := c.FormValue("date")
-	if typeParam == "1" {
-		// newTransaction.Type, _ = strconv.Atoi(typeParam)
-	}
+// 	typeParam := c.FormValue("date")
+// 	if typeParam == "1" {
+// 		// newTransaction.Type, _ = strconv.Atoi(typeParam)
+// 	}
 
-	if err := c.Bind(&newTransaction); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error":   "Dados inválidos",
-			"message": err.Error(),
-		})
-	}
+// 	if err := c.Bind(&newTransaction); err != nil {
+// 		return c.JSON(http.StatusBadRequest, map[string]string{
+// 			"error":   "Dados inválidos",
+// 			"message": err.Error(),
+// 		})
+// 	}
 
-	file, err := c.FormFile("proof")
-	if err == nil {
-		src, err := file.Open()
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao abrir o arquivo"})
-		}
-		defer src.Close()
-		dateStr := c.FormValue("date")
+// 	file, err := c.FormFile("proof")
+// 	if err == nil {
+// 		src, err := file.Open()
+// 		if err != nil {
+// 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao abrir o arquivo"})
+// 		}
+// 		defer src.Close()
+// 		dateStr := c.FormValue("date")
 
-		t, err := time.Parse("2006-01-02", dateStr)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro converter a data"})
-		}
+// 		t, err := time.Parse("2006-01-02", dateStr)
+// 		if err != nil {
+// 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro converter a data"})
+// 		}
 
-		// Criar o diretório do ano/mês
-		anoMes := t.Format("2006/01")
-		dir := fmt.Sprintf("static/comprovantes/%v/", anoMes)
-		os.MkdirAll(dir, os.ModePerm)
+// 		// Criar o diretório do ano/mês
+// 		anoMes := t.Format("2006/01")
+// 		dir := fmt.Sprintf("static/comprovantes/%v/", anoMes)
+// 		os.MkdirAll(dir, os.ModePerm)
 
-		// Gerar o caminho do arquivo
-		filename := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(file.Filename))
-		dstPath := filepath.Join(dir, filename)
+// 		// Gerar o caminho do arquivo
+// 		filename := fmt.Sprintf("%s%s", uuid.New().String(), filepath.Ext(file.Filename))
+// 		dstPath := filepath.Join(dir, filename)
 
-		// Criar o arquivo no servidor
-		dst, err := os.Create(dstPath)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao salvar o arquivo"})
-		}
-		defer dst.Close()
-		io.Copy(dst, src)
+// 		// Criar o arquivo no servidor
+// 		dst, err := os.Create(dstPath)
+// 		if err != nil {
+// 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao salvar o arquivo"})
+// 		}
+// 		defer dst.Close()
+// 		io.Copy(dst, src)
 
-		// Salvar o caminho do comprovante
-		newTransaction.Proof = &dstPath
-	}
+// 		// Salvar o caminho do comprovante
+// 		newTransaction.ReceiptUrl = &dstPath
+// 	}
 
-	// Salvar a transação no banco
-	if err := h.DB.Create(&newTransaction).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao salvar"})
-	}
+// 	// Salvar a transação no banco
+// 	if err := h.DB.Create(&newTransaction).Error; err != nil {
+// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao salvar"})
+// 	}
 
-	accountDestination := c.FormValue("account_destination")
+// 	accountDestination := c.FormValue("account_destination")
 
-	if accountDestination != "" {
-		acDes, _ := strconv.ParseUint(accountDestination, 10, 64)
-		var accDestination uint = uint(acDes)
+// 	if accountDestination != "" {
+// 		acDes, _ := strconv.ParseUint(accountDestination, 10, 64)
+// 		var accDestination uint = uint(acDes)
 
-		transactionDestination := models.Transaction{}
-		transactionDestination.TeamID = newTransaction.TeamID
-		transactionDestination.Date = newTransaction.Date
-		transactionDestination.Type = 1
-		transactionDestination.Transfer = true
-		transactionDestination.Description = newTransaction.Description
-		transactionDestination.CategoryID = newTransaction.CategoryID
-		transactionDestination.AccountID = accDestination
-		transactionDestination.TransactionOrigin = &newTransaction.ID
-		transactionDestination.Value = newTransaction.Value
+// 		transactionDestination := models.Transaction{}
+// 		transactionDestination.TeamID = newTransaction.TeamID
+// 		transactionDestination.Date = newTransaction.Date
+// 		transactionDestination.Type = models.TransactionTypeEntrada
+// 		transactionDestination.Description = newTransaction.Description
+// 		transactionDestination.CategoryID = newTransaction.CategoryID
+// 		transactionDestination.AccountID = &accDestination
+// 		transactionDestination.TransactionOriginId = &newTransaction.ID
+// 		transactionDestination.Value = newTransaction.Value
 
-		if err := h.DB.Create(&transactionDestination).Error; err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"error":   "Erro ao salvar",
-				"message": "Erro ao salvar na conta de destino",
-				"detail":  err.Error(),
-			})
-		}
+// 		if err := h.DB.Create(&transactionDestination).Error; err != nil {
+// 			return c.JSON(http.StatusInternalServerError, map[string]string{
+// 				"error":   "Erro ao salvar",
+// 				"message": "Erro ao salvar na conta de destino",
+// 				"detail":  err.Error(),
+// 			})
+// 		}
 
-	}
+// 	}
 
-	return c.JSON(http.StatusCreated, newTransaction)
-}
+// 	return c.JSON(http.StatusCreated, newTransaction)
+// }
 
 type TransactionOFX struct {
 	Type        string
@@ -554,10 +550,10 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 			record.TeamID = user.TeamID
 			record.Date = tx.Date
 			record.Description = tx.Description
-			record.ExternalId = tx.FITID
+			// record.ExternalId = tx.FITID
 			record.Type = 1
 			record.Value = tx.Amount
-			record.AccountID = accountImport.AccountID
+			// record.AccountID = &accountImport.AccountID
 
 			if tx.Type == "DEBIT" {
 				record.Value = tx.Amount * -1
@@ -687,7 +683,7 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 		record.TeamID = user.TeamID
 		record.Date = row[COLUMN_DATE]
 		record.Description = row[COLUMN_DESCRIPTION]
-		record.AccountID = accountImport.AccountID
+		// record.AccountID = &accountImport.AccountID
 
 		if row[COLUMN_ENTRY] != "" {
 			record.Type = 1

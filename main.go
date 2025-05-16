@@ -118,13 +118,13 @@ func main() {
 	e.PUT("/categories/:id", categoryHandler.Update)
 	e.DELETE("/categories/:id", categoryHandler.Delete)
 
-	e.GET("/transactions/create", CreateTransaction)
-	e.GET("/transactions/table", ListTransactions)
-	e.POST("/transactions", transactionHandler.CreateTransaction)
-	e.GET("/transactions", transactionHandler.ListTransactions)
-	e.GET("/transactions/:id", transactionHandler.GetByID)
-	e.PUT("/transactions/:id", transactionHandler.Update)
-	e.DELETE("/transactions/:id", transactionHandler.Delete)
+	e.POST("/transactions", controllers.CreateTransaction)
+	e.GET("/transactions", controllers.ListTransactions)
+	e.GET("/transactions/:transaction", controllers.GetTransaction)
+	e.PUT("/transactions/:transaction", controllers.UpdateTransaction)
+	e.DELETE("/transactions/:transaction", transactionHandler.Delete)
+
+	// Importação de transações
 	e.GET("/transactions/import", ImportTransaction)
 	e.POST("/transactions/import-ofx", transactionHandler.ImportOFX)
 	e.POST("/transactions/import-csv", transactionHandler.ImportCSV)

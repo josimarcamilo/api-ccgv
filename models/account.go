@@ -13,7 +13,5 @@ type Account struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" `
 	TeamID    uint           `gorm:"index" `
 	Name      string
-	UnidadeID *uint `gorm:"null"`
-
-	Unidade Unidade `gorm:"foreignKey:UnidadeID"`
+	Virtual   bool `gorm:"not null; default:false"`
 }

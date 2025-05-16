@@ -6,41 +6,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// type Account struct {
-// 	ID          uint           `gorm:"primarykey" json:"id"`
-// 	CreatedAt   time.Time      `json:"created_at"`
-// 	UpdatedAt   time.Time      `json:"updated_at"`
-// 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at"`
-// 	TeamID      uint           `gorm:"index"` // FK para Time
-// 	Name        string         `gorm:"size:255;not null" json:"name" form:"name"`
-// 	Balance     float64        `gorm:"type:decimal(10,2);not null;default:0" json:"balance,string"`
-// 	BalanceDate string         `json:"balance_date"`
-// 	ToReceive   bool           `gorm:"default:false" form:"to_receive" json:"to_receive"` // analisar se vai precisar
-// }
-
-// cadastrar orcamentos (posso criar uma rotina para cadastrar um para cada mes)
-
-type Transaction struct {
-	ID                uint           `gorm:"primarykey" json:"id"`
-	TeamID            uint           `gorm:"index:idx_date_team;index:idx_external_id"`
-	AccountID         uint           `gorm:"null" json:"account_id" form:"account_id"`
-	Date              string         `gorm:"type:date;index:idx_date_team" json:"date_at" form:"date"`
-	Type              int            `gorm:"not null" json:"type" form:"type"` // 1 - Entrada, 2 - Saída, 3 - Transferência
-	Description       string         `gorm:"size:255;not null" json:"description" form:"description"`
-	Value             float64        `gorm:"not null" json:"value" form:"value"`
-	CategoryID        uint           `gorm:"null" json:"category_id" form:"category_id"`
-	Category          Category       `gorm:"foreignKey:CategoryID" json:"category"`
-	CategoryMapID     uint           `gorm:"null" json:"category_map_id" form:"category_map_id"`
-	Account           Account        `gorm:"foreignKey:AccountID" json:"account"`
-	Proof             *string        `json:"proof" form:"proof"`
-	TransactionOrigin *uint          `gorm:"null" json:"transaction_origin"`
-	Transfer          bool           `gorm:"not null;default:false" form:"transfer" json:"transfer"`
-	ExternalId        string         `gorm:"null;index:idx_external_id" json:"external_id" form:"external_id"`
-	CreatedAt         time.Time      `json:"created_at"`
-	UpdatedAt         time.Time      `json:"updated_at"`
-	DeletedAt         gorm.DeletedAt `gorm:"index" json:"deleted_at"`
-}
-
 // comprovantes
 type Proof struct {
 	gorm.Model

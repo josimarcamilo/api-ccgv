@@ -5,7 +5,7 @@ meta {
 }
 
 put {
-  url: {{host}}/transactions/10
+  url: {{host}}/transactions/1
   body: json
   auth: bearer
 }
@@ -16,11 +16,13 @@ auth:bearer {
 
 body:json {
   {
-    "UnidadeID": 4,
-    "CategoryID": 9,
-    "CategoryMapID": 9,
+    "AccountID": 1,
+    "AccountVirtualID": null,
+    "CategoryID": null,
+    "CategoryMapID": null,
     "Type": 1,
-    "Date": "2025-05-08",
+    "IsTransfer": true,
+    "Date": "2025-05-09",
     "Description": "teste de entrada",
     "Value": 22.44
   }

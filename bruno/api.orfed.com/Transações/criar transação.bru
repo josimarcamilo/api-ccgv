@@ -1,7 +1,7 @@
 meta {
-  name: criar transação em unidade
+  name: criar transação
   type: http
-  seq: 2
+  seq: 1
 }
 
 post {
@@ -16,11 +16,13 @@ auth:bearer {
 
 body:json {
   {
-    "UnidadeID": 4,
-    "CategoryID": 9,
-    "CategoryMapID": 9,
+    "AccountID": 2,
+    "AccountVirtualID": 1,
+    "CategoryID": null,
+    "CategoryMapID": null,
     "Type": 1,
-    "Date": "2025-05-08",
+    "IsTransfer": false,
+    "Date": "2025-05-09",
     "Description": "teste de entrada",
     "Value": 22.44
   }

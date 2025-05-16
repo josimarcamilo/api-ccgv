@@ -4,25 +4,25 @@ import (
 	"jc-financas/models"
 )
 
-func CreateAccount(model *models.Account) error {
+func CreateCategory(model *models.Category) error {
 	return DB.Create(model).Error
 }
 
-func GetAccount(unidadeId, teamID uint) (*models.Account, error) {
-	var model models.Account
-	if err := DB.Where("team_id = ?", teamID).Where("id = ?", unidadeId).Preload("Unidade").First(&model).Error; err != nil {
+func GetCategory(id, teamID uint) (*models.Category, error) {
+	var model models.Category
+	if err := DB.Where("team_id = ?", teamID).Where("id = ?", id).First(&model).Error; err != nil {
 		return nil, err
 	}
 
 	return &model, nil
 }
 
-func UpdateAccount(model *models.Account) error {
+func UpdateCategory(model *models.Category) error {
 	return DB.Save(&model).Error
 }
 
-func GetAccounts(teamID uint) ([]models.Account, error) {
-	var models []models.Account
+func GetCategorys(teamID uint) ([]models.Category, error) {
+	var models []models.Category
 
 	if err := DB.Where("team_id = ?", teamID).Preload("Unidade").Find(&models).Error; err != nil {
 		return nil, err

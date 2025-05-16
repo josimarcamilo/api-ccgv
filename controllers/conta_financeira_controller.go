@@ -31,21 +31,6 @@ func CreateAccount(c echo.Context) error {
 			"error": "Nome obrigatório",
 		})
 	}
-	if model.UnidadeID != nil {
-		unidade, err := repositories.GetUnidade(*model.UnidadeID, claims.TeamID)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error":   "Unidade não encontrada",
-				"message": err.Error(),
-			})
-		}
-
-		if unidade.TeamID != claims.TeamID {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": "Unidade não pertence a equipe",
-			})
-		}
-	}
 
 	if err := repositories.CreateAccount(&model); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
@@ -126,24 +111,8 @@ func UpdadeAccount(c echo.Context) error {
 		})
 	}
 
-	if search.UnidadeID != nil {
-		unidade, err := repositories.GetUnidade(*search.UnidadeID, claims.TeamID)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error":   "Unidade não encontrada",
-				"message": err.Error(),
-			})
-		}
-
-		if unidade.TeamID != claims.TeamID {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": "Unidade não pertence a equipe",
-			})
-		}
-		find.UnidadeID = search.UnidadeID
-	}
-
 	find.Name = search.Name
+	find.Virtual = search.Virtual
 	if err := repositories.UpdateAccount(find); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error":   "Erro ao atualizar conta",
