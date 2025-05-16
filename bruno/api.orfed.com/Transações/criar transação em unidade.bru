@@ -1,0 +1,27 @@
+meta {
+  name: criar transação em unidade
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/transactions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "UnidadeID": 4,
+    "CategoryID": 9,
+    "CategoryMapID": 9,
+    "Type": 1,
+    "Date": "2025-05-08",
+    "Description": "teste de entrada",
+    "Value": 22.44
+  }
+}

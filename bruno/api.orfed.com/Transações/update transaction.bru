@@ -1,0 +1,27 @@
+meta {
+  name: update transaction
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{host}}/transactions/10
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "UnidadeID": 4,
+    "CategoryID": 9,
+    "CategoryMapID": 9,
+    "Type": 1,
+    "Date": "2025-05-08",
+    "Description": "teste de entrada",
+    "Value": 22.44
+  }
+}

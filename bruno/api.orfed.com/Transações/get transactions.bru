@@ -1,0 +1,21 @@
+meta {
+  name: get transactions
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{host}}/transactions
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "nome": "CCGV"
+  }
+}
