@@ -125,9 +125,10 @@ func main() {
 	e.DELETE("/transactions/:transaction", transactionHandler.Delete)
 
 	// Importação de transações
-	e.GET("/transactions/import", ImportTransaction)
 	e.POST("/transactions/import-ofx", transactionHandler.ImportOFX)
 	e.POST("/transactions/import-csv", transactionHandler.ImportCSV)
+
+	e.GET("/reports/balance", controllers.GetBalance)
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -5,13 +5,13 @@ meta {
 }
 
 get {
-  url: {{host}}/reports/balance
+  url: {{host}}/reports/balance?end_date=2025-05-16
   body: none
   auth: bearer
 }
 
 params:query {
-  ~end_date: 2025-05-16
+  end_date: 2025-05-16
 }
 
 auth:bearer {
