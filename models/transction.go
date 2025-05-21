@@ -23,11 +23,11 @@ type Transaction struct {
 	CategoryID       *uint `json:"CategoryID"`
 	CategoryMapID    *uint `json:"CategoryMapID"`
 
-	Type        int     `gorm:"not null"` // 1 - Entrada, 2 - Saída
-	IsTransfer  bool    `gorm:"not null; default:false"`
-	Date        string  `gorm:"type:date;index:idx_date_team"`
-	Description string  `gorm:"size:255;not null"`
-	Value       float64 `gorm:"not null"`
+	Type        int    `gorm:"not null"` // 1 - Entrada, 2 - Saída
+	IsTransfer  bool   `gorm:"not null; default:false"`
+	Date        string `gorm:"type:date;index:idx_date_team"`
+	Description string `gorm:"size:255;not null"`
+	Value       int    `gorm:"not null"`
 
 	TransactionOriginId *uint
 	ExternalId          *string `gorm:"index:idx_external_id"`

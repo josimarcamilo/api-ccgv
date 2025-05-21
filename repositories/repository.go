@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
-	"jc-financas/helpers"
 	"jc-financas/models"
 	"net/http"
 	"os"
@@ -552,11 +551,11 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 			record.Description = tx.Description
 			// record.ExternalId = tx.FITID
 			record.Type = 1
-			record.Value = tx.Amount
+			// record.Value = tx.Amount
 			// record.AccountID = &accountImport.AccountID
 
 			if tx.Type == "DEBIT" {
-				record.Value = tx.Amount * -1
+				// record.Value = tx.Amount * -1
 				record.Type = 2
 			}
 
@@ -687,7 +686,7 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 
 		if row[COLUMN_ENTRY] != "" {
 			record.Type = 1
-			record.Value, err = helpers.OnlyNumbers(row[COLUMN_ENTRY])
+			// record.Value, err = helpers.OnlyNumbers(row[COLUMN_ENTRY])
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{
 					"error":   "Erro OnlyNumbers",
@@ -697,7 +696,7 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 		}
 		if row[COLUMN_EXIT] != "" {
 			record.Type = 2
-			record.Value, err = helpers.OnlyNumbers(row[COLUMN_EXIT])
+			// record.Value, err = helpers.OnlyNumbers(row[COLUMN_EXIT])
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{
 					"error":   "Erro OnlyNumbers",
