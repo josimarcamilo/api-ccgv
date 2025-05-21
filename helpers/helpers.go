@@ -4,27 +4,28 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
-func OnlyNumbers(input string) (float64, error) {
+func OnlyNumbers(input string) (int, error) {
 	re := regexp.MustCompile(`\d+`)
-	numStr := re.FindAllString(input, -1)
+	numStrs := re.FindAllString(input, -1)
 
-	if len(numStr) == 0 {
+	if len(numStrs) == 0 {
 		return 0, fmt.Errorf("nenhum número encontrado na string")
 	}
 
-	// Concatenar todos os números encontrados
-	joinedNums := ""
-	for _, n := range numStr {
-		joinedNums += n
+	// Concatena todos os números encontrados
+	var joinedNums strings.Builder
+	for _, n := range numStrs {
+		joinedNums.WriteString(n)
 	}
 
-	// Converter para float64
-	num, err := strconv.ParseFloat(joinedNums, 64)
+	// Converte para int
+	num, err := strconv.Atoi(joinedNums.String())
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("erro ao converter para inteiro: %w", err)
 	}
 
-	return num / 100, nil
+	return num, nil
 }

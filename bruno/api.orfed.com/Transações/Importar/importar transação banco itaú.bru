@@ -1,11 +1,11 @@
 meta {
-  name: update transaction
+  name: importar transação banco itaú
   type: http
-  seq: 4
+  seq: 1
 }
 
-put {
-  url: {{host}}/transactions/1
+post {
+  url: {{host}}/transactions
   body: json
   auth: bearer
 }
@@ -17,13 +17,13 @@ auth:bearer {
 body:json {
   {
     "AccountID": 1,
-    "AccountVirtualID": null,
+    "AccountVirtualID": 4,
     "CategoryID": null,
     "CategoryMapID": null,
-    "Type": 1,
-    "IsTransfer": true,
-    "Date": "2025-05-09",
+    "Type": 2,
+    "IsTransfer": false,
+    "Date": "2025-05-11",
     "Description": "teste de entrada",
-    "Value": 22.44
+    "Value": 10000
   }
 }

@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
+	"jc-financas/helpers"
 	"jc-financas/models"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"reflect"
@@ -449,7 +451,7 @@ func (h *CRUDHandler) CreateAccount(c echo.Context) error {
 type TransactionOFX struct {
 	Type        string
 	Date        string
-	Amount      float64
+	Amount      string
 	FITID       string
 	CheckNum    string
 	Description string
@@ -510,8 +512,7 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 				current.Date = parsedDate.Format("2006-01-02")
 			}
 		} else if strings.HasPrefix(line, "<TRNAMT>") {
-			amount, _ := strconv.ParseFloat(strings.TrimPrefix(line, "<TRNAMT>"), 64)
-			current.Amount = amount
+			current.Amount = strings.TrimPrefix(line, "<TRNAMT>")
 		} else if strings.HasPrefix(line, "<FITID>") {
 			current.FITID = strings.TrimPrefix(line, "<FITID>")
 		} else if strings.HasPrefix(line, "<CHECKNUM>") {
@@ -542,7 +543,7 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 	}
 
 	for _, tx := range transactions {
-		fmt.Printf("%-10s %-12s %-10.2f %-15s %-10s %s\n", tx.Type, tx.Date, tx.Amount, tx.FITID, tx.CheckNum, tx.Description)
+		fmt.Printf("%v %v %v %v %v %v\n", tx.Type, tx.Date, tx.Amount, tx.FITID, tx.CheckNum, tx.Description)
 		record := models.Transaction{}
 		if err := h.DB.Where("team_id = ?", user.TeamID).Where("external_id = ?", tx.FITID).First(&record).Error; err != nil {
 			//criar
@@ -551,18 +552,23 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 			record.Description = tx.Description
 			// record.ExternalId = tx.FITID
 			record.Type = 1
-			// record.Value = tx.Amount
-			// record.AccountID = &accountImport.AccountID
+			record.AccountID = &accountImport.AccountID
+			record.Value, err = helpers.OnlyNumbers(tx.Amount)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{
+					"error":   "Erro OnlyNumbers",
+					"message": err.Error(),
+				})
+			}
 
 			if tx.Type == "DEBIT" {
-				// record.Value = tx.Amount * -1
 				record.Type = 2
 			}
 
 			if err := h.DB.Create(&record).Error; err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{
 					"error":   "Erro ao salvar",
-					"message": "Erro ao salvar a transacao " + fmt.Sprintf("%.2f", tx.Amount),
+					"message": "Erro ao salvar a transacao " + fmt.Sprintf("%v", tx.Amount),
 				})
 			}
 		}
@@ -574,31 +580,41 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 	})
 }
 
+type AccountImportCSV struct {
+	AccountID uint                  `json:"account_id" form:"account_id"`
+	File      *multipart.FileHeader `json:"file" form:"file"`
+}
+
 func (h *CRUDHandler) ImportCSV(c echo.Context) error {
-	// Obter a sessão e o usuário logado
-	session, err := storeSessions.Get(c.Request(), "session-id")
+	claims, err := ParseWithContext(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{
-			"error":   "Sessão inválida",
-			"message": "Sessão inválida",
-		})
-	}
-	user, ok := session.Values["user"].(models.User)
-	if !ok || user.ID == 0 {
-		return c.JSON(http.StatusUnauthorized, map[string]string{
-			"error":   "Usuário não autenticado",
-			"message": "Usuário não autenticado",
+			"error": err.Error(),
 		})
 	}
 
-	file, err := c.FormFile("file_csv")
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error":   "Erro",
-			"message": "Erro ao ler o arquivo",
+	var dto AccountImportCSV
+	if err := c.Bind(&dto); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Erro ao interpretar a requisição",
+			"message": err.Error(),
 		})
 	}
-	src, err := file.Open()
+
+	account, err := GetAccount(dto.AccountID, claims.TeamID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Conta não encontrada",
+			"message": err.Error(),
+		})
+	}
+	if account.TeamID != claims.TeamID {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Conta não pertence à equipe",
+		})
+	}
+
+	src, err := dto.File.Open()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error":   "Erro ao abrir o arquivo",
@@ -611,7 +627,7 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 	tempFile, err := os.CreateTemp("", "upload-*.csv")
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error":   "Erro",
+			"error":   "Erro ao criar arquivo temporário",
 			"message": err.Error(),
 		})
 	}
@@ -638,7 +654,7 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 
 	reader := csv.NewReader(csvFile)
 	reader.FieldsPerRecord = -1 // Permite linhas com números diferentes de colunas
-	reader.Comma = ';'          // Define o delimitador correto
+	// reader.Comma = ';'          // Define o delimitador ; padrao é ,
 
 	rows, err := reader.ReadAll()
 	if err != nil {
@@ -650,43 +666,43 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 
 	// Criar uma tabela formatada no console
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"DATA", "HISTÓRICO", "ENTRADA", "SAÍDA", "SALDO"})
+	table.SetHeader([]string{"DATA", "CATEGORIA", "CAT. MAPA", "HISTÓRICO", "ENTRADA", "SAÍDA"})
 
 	const COLUMN_DATE = 0
-	const COLUMN_DESCRIPTION = 1
-	const COLUMN_ENTRY = 2
-	const COLUMN_EXIT = 3
-	// Ler os dados a partir da linha 7 e exibir na tabela
+	const COLUMN_CAT = 1
+	const COLUMN_CAT_MAP = 2
+	const COLUMN_HISTORY = 3
+	const COLUMN_ENTRY = 4
+	const COLUMN_EXIT = 5
 	for i, row := range rows {
-		if i <= 6 {
-			continue // Pular cabeçalhos até a linha 7
+		// verifique se row[COLUMN_DATE] contem uma data válida
+		var dateRow time.Time
+		dateRow, err := time.Parse("02/01/2006", row[COLUMN_DATE])
+
+		if err != nil {
+			fmt.Println("Data inválida na linha", i+1, ":", row[COLUMN_DATE])
+			continue
 		}
-		if len(row) < 5 {
+
+		if len(row) < 6 {
 			continue // Garantir que há colunas suficientes
 		}
-		table.Append(row[:5])
+
+		table.Append(row[:6])
 
 		if row[COLUMN_ENTRY] == "" && row[COLUMN_EXIT] == "" {
 			continue
 		}
 
-		accountImport := AccountImport{}
-		if err := c.Bind(&accountImport); err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"error":   "Erro bind da conta",
-				"message": err.Error(),
-			})
-		}
-
 		record := models.Transaction{}
-		record.TeamID = user.TeamID
-		record.Date = row[COLUMN_DATE]
-		record.Description = row[COLUMN_DESCRIPTION]
-		// record.AccountID = &accountImport.AccountID
+		record.TeamID = claims.TeamID
+		record.Date = dateRow.Format("2006-01-02")
+		record.Description = row[COLUMN_HISTORY]
+		record.AccountID = &dto.AccountID
 
 		if row[COLUMN_ENTRY] != "" {
 			record.Type = 1
-			// record.Value, err = helpers.OnlyNumbers(row[COLUMN_ENTRY])
+			record.Value, err = helpers.OnlyNumbers(row[COLUMN_ENTRY])
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{
 					"error":   "Erro OnlyNumbers",
@@ -694,9 +710,10 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 				})
 			}
 		}
+
 		if row[COLUMN_EXIT] != "" {
 			record.Type = 2
-			// record.Value, err = helpers.OnlyNumbers(row[COLUMN_EXIT])
+			record.Value, err = helpers.OnlyNumbers(row[COLUMN_EXIT])
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{
 					"error":   "Erro OnlyNumbers",
