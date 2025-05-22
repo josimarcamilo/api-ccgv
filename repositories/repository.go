@@ -457,28 +457,54 @@ type TransactionOFX struct {
 	Description string
 }
 
-type AccountImport struct {
-	AccountID uint `json:"account_id" form:"account_id"`
+type AccountImportOFX struct {
+	AccountID uint                  `json:"account_id" form:"account_id"`
+	Bank      string                `json:"bank" form:"bank"`
+	File      *multipart.FileHeader `json:"file" form:"file"`
 }
 
 func (h *CRUDHandler) ImportOFX(c echo.Context) error {
-	// Obter a sessão e o usuário logado
-	session, err := storeSessions.Get(c.Request(), "session-id")
+	claims, err := ParseWithContext(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{
-			"error":   "Sessão inválida",
-			"message": "Sessão inválida",
-		})
-	}
-	user, ok := session.Values["user"].(models.User)
-	if !ok || user.ID == 0 {
-		return c.JSON(http.StatusUnauthorized, map[string]string{
-			"error":   "Usuário não autenticado",
-			"message": "Usuário não autenticado",
+			"error": err.Error(),
 		})
 	}
 
-	file, err := c.FormFile("file_ofx")
+	var dto AccountImportOFX
+	if err := c.Bind(&dto); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Erro ao interpretar a requisição",
+			"message": err.Error(),
+		})
+	}
+
+	if dto.Bank == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Banco obrigatório",
+		})
+	}
+
+	if dto.AccountID == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Conta obrigatória",
+		})
+	}
+
+	account, err := GetAccount(dto.AccountID, claims.TeamID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Conta não encontrada",
+			"message": err.Error(),
+		})
+	}
+	if account.TeamID != claims.TeamID {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Conta não pertence à equipe",
+		})
+	}
+
+	file, err := c.FormFile("file")
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error":   "Erro",
@@ -531,28 +557,20 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 		})
 	}
 
-	fmt.Printf("%-10s %-12s %-10s %-15s %-10s %s\n", "Tipo", "Data", "Valor", "FITID", "Cheque", "Descrição")
+	fmt.Printf("%v %v %v %v %v\n", "Tipo", "Data", "Valor", "Código", "Descrição")
 	fmt.Println(strings.Repeat("-", 70))
 
-	accountImport := AccountImport{}
-	if err := c.Bind(&accountImport); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error":   "Erro bind da conta",
-			"message": err.Error(),
-		})
-	}
-
 	for _, tx := range transactions {
-		fmt.Printf("%v %v %v %v %v %v\n", tx.Type, tx.Date, tx.Amount, tx.FITID, tx.CheckNum, tx.Description)
+		fmt.Printf("%v %v %v %v %v\n", tx.Type, tx.Date, tx.Amount, tx.FITID, tx.Description)
 		record := models.Transaction{}
-		if err := h.DB.Where("team_id = ?", user.TeamID).Where("external_id = ?", tx.FITID).First(&record).Error; err != nil {
+		if err := h.DB.Where("team_id = ?", claims.TeamID).Where("external_id = ?", tx.FITID).First(&record).Error; err != nil {
 			//criar
-			record.TeamID = user.TeamID
+			record.TeamID = claims.TeamID
 			record.Date = tx.Date
 			record.Description = tx.Description
-			// record.ExternalId = tx.FITID
+			record.ExternalId = &tx.FITID
 			record.Type = 1
-			record.AccountID = &accountImport.AccountID
+			record.AccountID = &dto.AccountID
 			record.Value, err = helpers.OnlyNumbers(tx.Amount)
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{

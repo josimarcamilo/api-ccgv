@@ -5,8 +5,8 @@ meta {
 }
 
 post {
-  url: {{host}}/transactions
-  body: json
+  url: {{host}}/transactions/import-ofx
+  body: multipartForm
   auth: bearer
 }
 
@@ -14,16 +14,8 @@ auth:bearer {
   token: {{token}}
 }
 
-body:json {
-  {
-    "AccountID": 1,
-    "AccountVirtualID": 4,
-    "CategoryID": null,
-    "CategoryMapID": null,
-    "Type": 2,
-    "IsTransfer": false,
-    "Date": "2025-05-11",
-    "Description": "teste de entrada",
-    "Value": 10000
-  }
+body:multipart-form {
+  account_id: 3
+  file: @file()
+  bank: itau
 }
