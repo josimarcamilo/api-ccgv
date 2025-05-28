@@ -211,14 +211,41 @@ func ListTransactions(c echo.Context) error {
 		})
 	}
 
-	results, err := repositories.GetTransactions(claims.TeamID)
+	var filer models.TransactionFilter
+	if err := c.Bind(&filer); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Binf error",
+			"message": err.Error(),
+		})
+	}
+
+	results, err := repositories.GetTransactions(claims.TeamID, filer)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error":   "Erro ao buscar contas",
 			"message": err.Error(),
 		})
 	}
+	// vamos tratar o resultado para pegar apenas o que queremos de results
+	var rows []models.TransactionList
+	for _, item := range results {
+		rows = append(rows, models.TransactionList{
+			ID:                 item.ID,
+			CreatedAt:          item.CreatedAt,
+			UpdatedAt:          item.UpdatedAt,
+			Type:               item.Type,
+			IsTransfer:         item.IsTransfer,
+			Date:               item.Date,
+			Description:        item.Description,
+			Value:              item.Value,
+			ReceiptUrl:         item.ReceiptUrl,
+			AccountName:        item.Account.Name,
+			AccountVirtualName: item.AccountVirtual.Name,
+			CategoryName:       item.Category.Name,
+			CategoryMapName:    item.CategoryMap.Name,
+		})
+	}
 
-	c.JSON(http.StatusOK, results)
+	c.JSON(http.StatusOK, rows)
 	return nil
 }

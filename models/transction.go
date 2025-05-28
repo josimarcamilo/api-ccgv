@@ -38,3 +38,25 @@ type Transaction struct {
 	Category       Category `gorm:"foreignKey:CategoryID"`
 	CategoryMap    Category `gorm:"foreignKey:CategoryMapID"`
 }
+
+type TransactionList struct {
+	ID                 uint
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+	Type               int
+	IsTransfer         bool
+	Date               string
+	Description        string
+	Value              int
+	ReceiptUrl         *string
+	AccountName        string
+	AccountVirtualName string
+	CategoryName       string
+	CategoryMapName    string
+}
+
+type TransactionFilter struct {
+	Type      string `query:"type"`
+	StartDate string `query:"start_date"`
+	EndDate   string `query:"end_date"`
+}

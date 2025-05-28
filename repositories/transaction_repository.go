@@ -10,7 +10,7 @@ func CreateTransaction(model *models.Transaction) error {
 
 func GetTransaction(ID, teamID uint) (*models.Transaction, error) {
 	var model models.Transaction
-	if err := DB.Where("team_id = ?", teamID).Where("id = ?", ID).First(&model).Error; err != nil {
+	if err := DB.Where("team_id = ?", teamID).Where("id = ?", ID).Preload("Account").Preload("AccountVirtual").Preload("Category").Preload("CategoryMap").First(&model).Error; err != nil {
 		return nil, err
 	}
 
@@ -80,10 +80,23 @@ func UpdateTransaction(model *models.Transaction) error {
 // 	return updates
 // }
 
-func GetTransactions(teamID uint) ([]models.Transaction, error) {
+func GetTransactions(teamID uint, filter models.TransactionFilter) ([]models.Transaction, error) {
 	var models []models.Transaction
+	query := DB.Where("team_id = ?", teamID)
 
-	if err := DB.Where("team_id = ?", teamID).Find(&models).Error; err != nil {
+	if filter.Type != "" {
+		query.Where("type = ?", filter.Type)
+	}
+
+	if filter.StartDate != "" {
+		query.Where("date >= ?", filter.StartDate)
+	}
+
+	if filter.EndDate != "" {
+		query.Where("date <= ?", filter.EndDate)
+	}
+
+	if err := query.Preload("Account").Preload("AccountVirtual").Preload("Category").Preload("CategoryMap").Find(&models).Error; err != nil {
 		return nil, err
 	}
 	return models, nil
