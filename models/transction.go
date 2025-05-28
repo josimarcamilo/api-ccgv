@@ -56,7 +56,9 @@ type TransactionList struct {
 }
 
 type TransactionFilter struct {
-	Type      string `query:"type"`
-	StartDate string `query:"start_date"`
-	EndDate   string `query:"end_date"`
+	Type             string `query:"type"`
+	StartDate        string `query:"start_date"`
+	EndDate          string `query:"end_date"`
+	AccountID        string `query:"account_id"`
+	AccountVirtualID string `query:"account_virtual_id"`
 }

@@ -96,6 +96,14 @@ func GetTransactions(teamID uint, filter models.TransactionFilter) ([]models.Tra
 		query.Where("date <= ?", filter.EndDate)
 	}
 
+	if filter.AccountID != "" {
+		query.Where("account_id = ?", filter.AccountID)
+	}
+
+	if filter.AccountVirtualID != "" {
+		query.Where("account_virtual_id = ?", filter.AccountVirtualID)
+	}
+
 	if err := query.Preload("Account").Preload("AccountVirtual").Preload("Category").Preload("CategoryMap").Find(&models).Error; err != nil {
 		return nil, err
 	}
