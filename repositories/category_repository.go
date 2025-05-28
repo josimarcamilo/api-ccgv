@@ -21,10 +21,14 @@ func UpdateAccount(model *models.Account) error {
 	return DB.Save(&model).Error
 }
 
-func GetAccounts(teamID uint) ([]models.Account, error) {
+func GetAccounts(teamID uint, filter models.AccountFilter) ([]models.Account, error) {
 	var models []models.Account
+	query := DB.Where("team_id = ?", teamID)
+	if filter.Virtual != "" {
+		query.Where("virtual = ?", filter.Virtual)
+	}
 
-	if err := DB.Where("team_id = ?", teamID).Find(&models).Error; err != nil {
+	if err := query.Find(&models).Error; err != nil {
 		return nil, err
 	}
 	return models, nil

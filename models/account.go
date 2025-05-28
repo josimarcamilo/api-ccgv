@@ -6,6 +6,10 @@ import (
 	"gorm.io/gorm"
 )
 
+type AccountFilter struct {
+	Virtual string `query:"virtual"`
+}
+
 type Account struct {
 	ID        uint `gorm:"primaryKey" param:"account"`
 	CreatedAt time.Time

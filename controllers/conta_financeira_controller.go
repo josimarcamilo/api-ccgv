@@ -132,7 +132,12 @@ func ListAccounts(c echo.Context) error {
 		})
 	}
 
-	results, err := repositories.GetAccounts(claims.TeamID)
+	var filter models.AccountFilter
+	if err := c.Bind(&filter); err != nil {
+		return errors.Wrap(err, "bind request")
+	}
+
+	results, err := repositories.GetAccounts(claims.TeamID, filter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error":   "Erro ao buscar contas",

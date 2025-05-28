@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{host}}/accounts
+  url: {{host}}/accounts?virtual=0
   body: none
   auth: bearer
+}
+
+params:query {
+  virtual: 0
 }
 
 auth:bearer {
