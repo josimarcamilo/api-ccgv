@@ -8,25 +8,29 @@ type AccountBalanceReport struct {
 	Balance         int
 }
 type AccountBalance struct {
-	AccountID uint
-	Total     int
+	AccountName string `gorm:"column:name"` // Alias usado no SELECT
+	AccountID   uint   `gorm:"column:account_id"`
+	Total       int    `gorm:"column:total"`
 }
 type VirtualAccountBalance struct {
-	AccountVirtualID uint
-	Total            int
+	AccountName      string `gorm:"column:name"` // Alias usado no SELECT
+	AccountVirtualID uint   `gorm:"column:account_virtual_id"`
+	Total            int    `gorm:"column:total"`
 }
 
 func GetBalance(endDate string, teamId uint) AccountBalanceReport {
 	var accountBalances []AccountBalance
-	var virtualAccountBalances []VirtualAccountBalance
 	DB.Model(&models.Transaction{}).
-		Select("account_id, SUM(CASE WHEN type = 1 THEN value ELSE -value END) as total").
-		Where("team_id = ?", teamId).
-		Where("account_id is not null").
+		Joins("JOIN accounts ON accounts.id = transactions.account_id").
+		Select("accounts.name AS name, account_id, SUM(CASE WHEN type = 1 THEN value ELSE -value END) AS total").
+		Where("transactions.team_id = ?", teamId).
+		Where("account_id IS NOT NULL").
 		Where("date <= ?", endDate).
-		Group("account_id").
+		Group("accounts.name, account_id").
+		Order("total desc").
 		Scan(&accountBalances)
 
+	var virtualAccountBalances []VirtualAccountBalance
 	DB.Model(&models.Transaction{}).
 		Select("account_virtual_id, SUM(CASE WHEN type = 1 THEN value ELSE -value END) as total").
 		Where("team_id = ?", teamId).
