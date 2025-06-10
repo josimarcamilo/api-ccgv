@@ -15,7 +15,7 @@ import (
 	// "github.com/labstack/echo/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -38,8 +38,14 @@ func main() {
 		MaxAge:   3600, // O cookie vai durar 1 hora
 		HttpOnly: true, // Impede o acesso ao cookie via JavaScript
 	}
-	// Inicializar o banco de dados
-	db, err := gorm.Open(sqlite.Open("financas.db"), &gorm.Config{})
+	// sqlite
+	// db, err := gorm.Open(sqlite.Open("financas.db"), &gorm.Config{})
+	postgresDSN := os.Getenv("POSTGRES_DSN")
+	if postgresDSN == "" {
+		postgresDSN = "host=localhost user=myuser password=mypassword dbname=ssvp port=5444 sslmode=disable TimeZone=America/Sao_Paulo"
+	}
+
+	db, err := gorm.Open(postgres.Open(postgresDSN), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
 	}
@@ -47,10 +53,8 @@ func main() {
 
 	// Migrar o modelo para o banco de dados
 	if err := db.AutoMigrate(
-		&models.Unidade{},
 		&models.User{},
 		&models.Team{},
-		&models.Role{},
 		&models.UserTeam{},
 		&models.Account{},
 		&models.Category{},

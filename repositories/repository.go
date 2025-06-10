@@ -73,12 +73,19 @@ func (h *CRUDHandler) Register(c echo.Context) error {
 		})
 	}
 
+	if defaultTeam.ID == 0 {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Time nao criado",
+			"message": "",
+		})
+	}
+
 	// Atualizar o team_id do usuário logado
 	if err := h.DB.Model(&models.User{}).Where("id = ?", user.ID).Update("team_id", defaultTeam.ID).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Erro ao associar o time ao usuário"})
 	}
 
-	user.TeamID = defaultTeam.ID
+	user.TeamID = &defaultTeam.ID
 	return c.JSON(http.StatusCreated, user)
 }
 
@@ -343,7 +350,7 @@ func (h *CRUDHandler) CreateAccount(c echo.Context) error {
 	}
 
 	// Definir TeamID
-	model.TeamID = user.TeamID
+	model.TeamID = *user.TeamID
 
 	// Salvar o registro no banco
 	if err := h.DB.Create(&model).Error; err != nil {

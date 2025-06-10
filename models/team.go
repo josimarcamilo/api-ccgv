@@ -7,13 +7,11 @@ import (
 )
 
 type Team struct {
-	ID         uint       `gorm:"primaryKey"`
+	gorm.Model
 	Name       string     `gorm:"size:255;not null;"`
 	UserID     uint       `gorm:"index"`
 	Categories []Category `gorm:"foreignKey:TeamID"`
 	Accounts   []Account  `gorm:"foreignKey:TeamID"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
 }
 
 type Role struct {

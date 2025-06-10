@@ -21,7 +21,7 @@ type MyCustomClaims struct {
 func GenerateJWT(user models.User) (string, error) {
 	claims := MyCustomClaims{
 		UserID:    user.ID,
-		TeamID:    user.TeamID,
+		TeamID:    *user.TeamID,
 		TeamName:  user.Team.Name,
 		UserEmail: user.Email,
 		RegisteredClaims: jwt.RegisteredClaims{

@@ -119,7 +119,7 @@ func AddUserToTeam(c echo.Context) error {
 	user.Password = string(hashedPassword)
 	user.Name = loginRequest.Name
 	user.Email = loginRequest.Email
-	user.TeamID = claims.TeamID
+	user.TeamID = &claims.TeamID
 
 	if err := repositories.CreateUser(&user); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
