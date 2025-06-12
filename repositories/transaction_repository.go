@@ -18,11 +18,16 @@ func GetTransaction(ID, teamID uint) (*models.Transaction, error) {
 }
 
 func UpdateTransaction(model *models.Transaction) error {
-	return DB.
-		Save(model).Error
-	// return DB.Model(&models.Transaction{}).
-	// 	Where("id = ?", id).
-	// 	Updates(updates).Error
+	return DB.Model(&models.Transaction{}).
+		Where("id = ?", model.ID).
+		Select("AccountID", "AccountVirtualID", "CategoryID", "CategoryMapID", "Date", "Description", "Type", "Value").
+		Updates(model).Error
+}
+
+func DeleteTransaction(model *models.Transaction) error {
+	return DB.Model(&models.Transaction{}).
+		Where("id = ?", model.ID).
+		Delete(model).Error
 }
 
 // func BuildTransactionUpdateMap(tx *models.Transaction) map[string]interface{} {

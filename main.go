@@ -126,7 +126,7 @@ func main() {
 	e.GET("/transactions", controllers.ListTransactions)
 	e.GET("/transactions/:transaction", controllers.GetTransaction)
 	e.PUT("/transactions/:transaction", controllers.UpdateTransaction)
-	e.DELETE("/transactions/:transaction", transactionHandler.Delete)
+	e.DELETE("/transactions/:transaction", controllers.Delete)
 
 	// Importação de transações
 	e.POST("/transactions/import-ofx", transactionHandler.ImportOFX)

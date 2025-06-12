@@ -49,9 +49,13 @@ type TransactionList struct {
 	Description        string
 	Value              int
 	ReceiptUrl         *string
+	AccountID          uint
 	AccountName        string
+	AccountVirtualID   uint
 	AccountVirtualName string
+	CategoryID         uint
 	CategoryName       string
+	CategoryMapID      uint
 	CategoryMapName    string
 }
 

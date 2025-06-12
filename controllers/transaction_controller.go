@@ -203,6 +203,50 @@ func UpdateTransaction(c echo.Context) error {
 	})
 }
 
+func Delete(c echo.Context) error {
+	claims, err := repositories.ParseWithContext(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	var tx models.Transaction
+	if err := c.Bind(&tx); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Erro ao interpretar o corpo da requisição",
+			"message": err.Error(),
+		})
+	}
+
+	// ID obrigatório para saber o que atualizar
+	if tx.ID == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "ID da transação é obrigatório",
+		})
+	}
+
+	// Busca original para validar team
+	fmt.Println(tx.ID, claims.TeamID)
+	existing, err := repositories.GetTransaction(tx.ID, claims.TeamID)
+	if err != nil || existing.TeamID != claims.TeamID {
+		return c.JSON(http.StatusNotFound, map[string]string{
+			"error": "Transação não encontrada ou não pertence à equipe",
+		})
+	}
+
+	if err := repositories.DeleteTransaction(existing); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error":   "Erro ao deletar transação",
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Transação deletada com sucesso",
+	})
+}
+
 func ListTransactions(c echo.Context) error {
 	claims, err := repositories.ParseWithContext(c)
 	if err != nil {
@@ -239,9 +283,13 @@ func ListTransactions(c echo.Context) error {
 			Description:        item.Description,
 			Value:              item.Value,
 			ReceiptUrl:         item.ReceiptUrl,
+			AccountID:          item.Account.ID,
 			AccountName:        item.Account.Name,
+			AccountVirtualID:   item.AccountVirtual.ID,
 			AccountVirtualName: item.AccountVirtual.Name,
+			CategoryID:         item.Category.ID,
 			CategoryName:       item.Category.Name,
+			CategoryMapID:      item.CategoryMap.ID,
 			CategoryMapName:    item.CategoryMap.Name,
 		})
 	}
