@@ -89,6 +89,7 @@ func main() {
 	})
 
 	e.Static("/static", "static")
+	e.GET("/", HealthCheck)
 
 	userHandler := repositories.CRUDHandler{DB: db, Model: &models.User{}, TableName: "users"}
 	// user
@@ -139,6 +140,12 @@ func main() {
 		port = "8000" // Porta padrão para desenvolvimento local
 	}
 	e.Logger.Fatal(e.Start(":" + port))
+}
+
+func HealthCheck(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"status": "healthy",
+	})
 }
 
 func GetCrudConfig(c echo.Context) error {
