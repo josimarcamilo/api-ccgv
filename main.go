@@ -40,9 +40,10 @@ func main() {
 	}
 	// sqlite
 	// db, err := gorm.Open(sqlite.Open("financas.db"), &gorm.Config{})
-	postgresDSN := os.Getenv("POSTGRES_DSN")
+	postgresDSN := os.Getenv("DATABASE_URL")
 	if postgresDSN == "" {
-		postgresDSN = "host=localhost user=myuser password=mypassword dbname=ssvp port=5444 sslmode=disable TimeZone=America/Sao_Paulo"
+		// postgres://user:password@host:port/database
+		postgresDSN = "postgres://myuser:mypassword@localhost:5444/ssvp"
 	}
 
 	db, err := gorm.Open(postgres.Open(postgresDSN), &gorm.Config{})
