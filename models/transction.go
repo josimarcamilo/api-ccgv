@@ -23,7 +23,7 @@ type Transaction struct {
 	CategoryID       *uint `json:"CategoryID"`
 	CategoryMapID    *uint `json:"CategoryMapID"`
 
-	Type        int    `gorm:"not null"` // 1 - Entrada, 2 - Saída
+	Type        int8   `gorm:"not null"` // 1 - Entrada, 2 - Saída
 	IsTransfer  bool   `gorm:"not null; default:false"`
 	Date        string `gorm:"type:date;index:idx_date_team"`
 	Description string `gorm:"size:255;not null"`
@@ -43,7 +43,7 @@ type TransactionList struct {
 	ID                 uint
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
-	Type               int
+	Type               int8
 	IsTransfer         bool
 	Date               string
 	Description        string

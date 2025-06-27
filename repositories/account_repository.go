@@ -4,12 +4,12 @@ import (
 	"jc-financas/models"
 )
 
-func CreateCategory(model *models.Category) error {
+func CreateAccount(model *models.Account) error {
 	return DB.Create(model).Error
 }
 
-func GetCategory(id, teamID uint) (*models.Category, error) {
-	var model models.Category
+func GetAccount(id, teamID uint) (*models.Account, error) {
+	var model models.Account
 	if err := DB.Where("team_id = ?", teamID).Where("id = ?", id).First(&model).Error; err != nil {
 		return nil, err
 	}
@@ -17,14 +17,18 @@ func GetCategory(id, teamID uint) (*models.Category, error) {
 	return &model, nil
 }
 
-func UpdateCategory(model *models.Category) error {
+func UpdateAccount(model *models.Account) error {
 	return DB.Save(&model).Error
 }
 
-func GetCategorys(teamID uint) ([]models.Category, error) {
-	var models []models.Category
+func GetAccounts(teamID uint, filter models.AccountFilter) ([]models.Account, error) {
+	var models []models.Account
+	query := DB.Where("team_id = ?", teamID)
+	if filter.Virtual != "" {
+		query.Where("virtual = ?", filter.Virtual)
+	}
 
-	if err := DB.Where("team_id = ?", teamID).Preload("Unidade").Find(&models).Error; err != nil {
+	if err := query.Find(&models).Error; err != nil {
 		return nil, err
 	}
 	return models, nil

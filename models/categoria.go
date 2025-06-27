@@ -6,6 +6,9 @@ import (
 	"gorm.io/gorm"
 )
 
+const CATEGORY_ENTRY = 1
+const CATEGORY_EXIT = 2
+
 type Category struct {
 	ID          uint           `gorm:"primarykey" json:"id"`
 	CreatedAt   time.Time      `json:"created_at"`

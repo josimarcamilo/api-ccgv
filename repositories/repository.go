@@ -633,6 +633,7 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 			"message": err.Error(),
 		})
 	}
+
 	if account.TeamID != claims.TeamID {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Conta não pertence à equipe",
@@ -718,6 +719,7 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 		if row[COLUMN_ENTRY] == "" && row[COLUMN_EXIT] == "" {
 			continue
 		}
+		category := models.Category{TeamID: claims.TeamID, Name: row[COLUMN_CAT], UseMap: false}
 
 		record := models.Transaction{}
 		record.TeamID = claims.TeamID
@@ -727,6 +729,7 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 
 		if row[COLUMN_ENTRY] != "" {
 			record.Type = 1
+			category.Type = models.CATEGORY_ENTRY
 			record.Value, err = helpers.OnlyNumbers(row[COLUMN_ENTRY])
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{
@@ -734,10 +737,12 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 					"message": err.Error(),
 				})
 			}
+
 		}
 
 		if row[COLUMN_EXIT] != "" {
 			record.Type = 2
+			category.Type = models.CATEGORY_EXIT
 			record.Value, err = helpers.OnlyNumbers(row[COLUMN_EXIT])
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{
@@ -746,6 +751,30 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 				})
 			}
 		}
+
+		if row[COLUMN_CAT_MAP] != "" {
+			categoryMap := models.Category{Type: record.Type, TeamID: claims.TeamID, Name: row[COLUMN_CAT_MAP], UseMap: true}
+			newCatMap, err := UpsertCategory(&categoryMap)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, map[string]string{
+					"error":   "Erro ao salvar a categoria do mapa.",
+					"message": err.Error(),
+				})
+			}
+			record.CategoryMapID = &newCatMap.ID
+		}
+
+		newCat, err := UpsertCategory(&category)
+
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error":   "Erro ao salvar a categoria.",
+				"message": err.Error(),
+			})
+		}
+
+		fmt.Printf("categoria cadastrada %d", newCat.ID)
+		record.CategoryID = &newCat.ID
 
 		if err := h.DB.Create(&record).Error; err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{
