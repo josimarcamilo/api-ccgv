@@ -20,7 +20,7 @@ func GetTransaction(ID, teamID uint) (*models.Transaction, error) {
 func UpdateTransaction(model *models.Transaction) error {
 	return DB.Model(&models.Transaction{}).
 		Where("id = ?", model.ID).
-		Select("AccountID", "AccountVirtualID", "CategoryID", "CategoryMapID", "Date", "Description", "Type", "Value").
+		Select("AccountID", "AccountVirtualID", "CategoryID", "CategoryMapID", "Date", "Description", "Type", "Value", "IsTransfer").
 		Updates(model).Error
 }
 
@@ -108,6 +108,8 @@ func GetTransactions(teamID uint, filter models.TransactionFilter) ([]models.Tra
 	if filter.AccountVirtualID != "" {
 		query.Where("account_virtual_id = ?", filter.AccountVirtualID)
 	}
+
+	query.Order("date DESC")
 
 	if err := query.Preload("Account").Preload("AccountVirtual").Preload("Category").Preload("CategoryMap").Find(&models).Error; err != nil {
 		return nil, err
