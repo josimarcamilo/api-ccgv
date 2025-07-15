@@ -1,0 +1,408 @@
+{{define "report-extract"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Extrato de Contas</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #2d3748;
+    }
+
+    .extrato-container {
+      background: #ffffff;
+      max-width: 900px;
+      margin: 0 auto;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      color: white;
+      padding: 32px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.025em;
+    }
+
+    .header p {
+      opacity: 0.8;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 32px;
+    }
+
+    .account-section {
+      margin-bottom: 40px;
+      page-break-inside: avoid;
+    }
+
+    .account-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a202c;
+      margin-bottom: 24px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .info-card {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .info-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .balance-positive {
+      color: #38a169;
+    }
+
+    .balance-negative {
+      color: #e53e3e;
+    }
+
+    .transactions-section {
+      margin-top: 32px;
+    }
+
+    .transactions-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a202c;
+      margin-bottom: 16px;
+    }
+
+    .transactions-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .transactions-table thead {
+      background: #1a202c;
+    }
+
+    .transactions-table th {
+      padding: 0;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      height: 40px;
+      vertical-align: middle;
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    .transactions-table th:last-child {
+      text-align: right;
+    }
+
+    .transactions-table tbody tr {
+      border-bottom: 1px solid #e2e8f0;
+      transition: background-color 0.2s ease;
+    }
+
+    .transactions-table tbody tr:hover {
+      background-color: #f7fafc;
+    }
+
+    .transactions-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .transactions-table td {
+      padding: 0;
+      font-size: 10px;
+      color: #4a5568;
+      height: 32px;
+      vertical-align: middle;
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    .transaction-date {
+      font-weight: 500;
+      color: #2d3748;
+    }
+
+    .transaction-description {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .transaction-type {
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .transaction-type.credit {
+      color: #38a169;
+    }
+
+    .transaction-type.debit {
+      color: #e53e3e;
+    }
+
+    .transaction-value {
+      text-align: right;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+    }
+
+    .transaction-value.positive {
+      color: #38a169;
+    }
+
+    .transaction-value.negative {
+      color: #e53e3e;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #718096;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .header {
+        padding: 24px;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .transactions-table {
+        font-size: 9px;
+      }
+
+      .transactions-table th,
+      .transactions-table td {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .extrato-container {
+        box-shadow: none;
+        border-radius: 0;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+
+      .info-card {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 12px;
+        min-height: 60px;
+      }
+
+      .info-label {
+        font-size: 10px;
+        margin-bottom: 2px;
+      }
+
+      .info-value {
+        font-size: 12px;
+      }
+
+      .account-section {
+        page-break-before: always;
+      }
+
+      .account-section:first-child {
+        page-break-before: auto;
+      }
+
+      .transactions-table {
+        margin-top: 20px;
+      }
+
+      .header {
+        padding: 20px;
+      }
+
+      .content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="extrato-container">
+    <div class="header">
+      <h1>Extrato de Contas</h1>
+      <p>Relatório detalhado de movimentações financeiras</p>
+    </div>
+
+    <div class="content">
+      {{range .Data}}
+        <div class="account-section">
+          <h2 class="account-title">{{.AccountName}}</h2>
+          
+          <div class="info-grid">
+            <div class="info-card">
+              <div class="info-label">Período</div>
+              <div class="info-value">
+                <span class="format-date">{{.StartDate}}</span> até <span class="format-date">{{.EndDate}}</span>
+              </div>
+            </div>
+            
+            <div class="info-card">
+              <div class="info-label">Saldo Inicial</div>
+              <div class="info-value">{{.StartBalance}}</div>
+            </div>
+            
+            <div class="info-card">
+              <div class="info-label">Total de Entradas</div>
+              <div class="info-value balance-positive">{{.TotalEntry}}</div>
+            </div>
+            
+            <div class="info-card">
+              <div class="info-label">Total de Saídas</div>
+              <div class="info-value balance-negative">{{.TotalExit}}</div>
+            </div>
+            
+            <div class="info-card">
+              <div class="info-label">Saldo Final</div>
+              <div class="info-value">{{.EndBalance}}</div>
+            </div>
+          </div>
+
+          <div class="transactions-section">
+            <h3 class="transactions-title">Movimentações</h3>
+            
+            {{if .Transactions}}
+              <table class="transactions-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Histórico</th>
+                    <th>Tipo</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{range .Transactions}}
+                    <tr>
+                      <td class="transaction-date format-date">{{.Date}}</td>
+                      <td class="transaction-description" title="{{.Description}}">{{.Description}}</td>
+                      <td class="transaction-type {{ if eq .Type 1 }}credit{{ else }}debit{{ end }}">
+                        {{ if eq .Type 1 }}Crédito{{ else }}Débito{{ end }}
+                      </td>
+                      <td class="transaction-value {{ if eq .Type 1 }}positive{{ else }}negative{{ end }}">
+                        {{.Value}}
+                      </td>
+                    </tr>
+                  {{end}}
+                </tbody>
+              </table>
+            {{else}}
+              <div class="empty-state">
+                <p>Nenhuma movimentação encontrada para o período selecionado.</p>
+              </div>
+            {{end}}
+          </div>
+        </div>
+      {{end}}
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const elements = document.querySelectorAll(".format-date");
+      elements.forEach(el => {
+        const rawDate = el.textContent.trim();
+        const date = new Date(rawDate);
+        if (!isNaN(date)) {
+          const formatter = new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            timeZone: 'UTC'
+          });
+          el.textContent = formatter.format(date);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+{{end}}
