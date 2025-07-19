@@ -1,0 +1,536 @@
+{{define "report-mapa"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa Mensal</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #2d3748;
+    }
+
+    .mapa-container {
+      background: #ffffff;
+      max-width: 1000px;
+      margin: 0 auto;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      color: white;
+      padding: 32px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.025em;
+    }
+
+    .header p {
+      opacity: 0.8;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 32px;
+    }
+
+    .period-section {
+      margin-bottom: 40px;
+      page-break-inside: avoid;
+    }
+
+    .period-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a202c;
+      margin-bottom: 24px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .balance-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .balance-card {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .balance-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .balance-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .balance-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2d3748;
+      font-family: 'Courier New', monospace;
+    }
+
+    .balance-positive {
+      color: #38a169;
+    }
+
+    .balance-negative {
+      color: #e53e3e;
+    }
+
+    .movements-section {
+      margin-bottom: 40px;
+    }
+
+    .movements-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a202c;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .movements-title.entries {
+      color: #38a169;
+    }
+
+    .movements-title.exits {
+      color: #e53e3e;
+    }
+
+    .movements-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      border-radius: 2px;
+    }
+
+    .movements-title.entries::before {
+      background: #38a169;
+    }
+
+    .movements-title.exits::before {
+      background: #e53e3e;
+    }
+
+    .category-section {
+      margin-bottom: 32px;
+      background: #f8fafc;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+
+    .category-header {
+      background: #1a202c;
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .category-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .category-total {
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+
+    .category-total.positive {
+      color: #68d391;
+    }
+
+    .category-total.negative {
+      color: #fc8181;
+    }
+
+    .transactions-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    .transactions-table thead {
+      background: #f1f5f9;
+    }
+
+    .transactions-table th {
+      padding: 0;
+      font-size: 10px;
+      font-weight: 600;
+      color: #475569;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      height: 36px;
+      vertical-align: middle;
+      padding-left: 12px;
+      padding-right: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .transactions-table th:last-child {
+      text-align: right;
+    }
+
+    .transactions-table tbody tr {
+      border-bottom: 1px solid #f1f5f9;
+      transition: background-color 0.2s ease;
+    }
+
+    .transactions-table tbody tr:hover {
+      background-color: #f8fafc;
+    }
+
+    .transactions-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .transactions-table td {
+      padding: 0;
+      font-size: 10px;
+      color: #64748b;
+      height: 32px;
+      vertical-align: middle;
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    .transaction-date {
+      font-weight: 500;
+      color: #334155;
+    }
+
+    .transaction-description {
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .transaction-value {
+      text-align: right;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+    }
+
+    .transaction-value.positive {
+      color: #38a169;
+    }
+
+    .transaction-value.negative {
+      color: #e53e3e;
+    }
+
+    .summary-section {
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 2px solid #e2e8f0;
+    }
+
+    .summary-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a202c;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .summary-card {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .summary-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .summary-value {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+
+    .empty-category {
+      padding: 20px;
+      text-align: center;
+      color: #718096;
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .header {
+        padding: 24px;
+      }
+
+      .balance-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .transactions-table {
+        font-size: 9px;
+      }
+
+      .transactions-table th,
+      .transactions-table td {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .mapa-container {
+        box-shadow: none;
+        border-radius: 0;
+      }
+
+      .balance-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .balance-card, .summary-card {
+        background: #f9f9f9 !important;
+        color: #333 !important;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 12px;
+      }
+
+      .period-section {
+        page-break-before: always;
+      }
+
+      .period-section:first-child {
+        page-break-before: auto;
+      }
+
+      .header {
+        padding: 20px;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .category-section {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="mapa-container">
+    <div class="header">
+      <h1>Mapa Mensal</h1>
+      <p>Relatório detalhado de movimentações por categoria</p>
+    </div>
+
+    <div class="content">
+      <div class="period-section">
+        <h2 class="period-title">Período: {{.Data.StartDate}} a {{.Data.EndDate}}</h2>
+
+        <div class="balance-grid">
+          <div class="balance-card">
+            <div class="balance-label">Saldo Anterior</div>
+            <div class="balance-value">{{.Data.StartBalance}}</div>
+          </div>
+          
+          <div class="balance-card">
+            <div class="balance-label">Saldo Final</div>
+            <div class="balance-value">{{.Data.EndBalance}}</div>
+          </div>
+        </div>
+
+        <!-- Seção de Entradas -->
+        <div class="movements-section">
+          <h3 class="movements-title entries">Entradas</h3>
+          
+          {{range .Data.Entry}}
+            {{if .Transactions}}
+              <div class="category-section">
+                <div class="category-header">
+                  <span class="category-name">{{.Name}}</span>
+                  <span class="category-total positive">{{index $.Data.Totals .ID}}</span>
+                </div>
+
+                <table class="transactions-table">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Descrição</th>
+                      <th>Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{range .Transactions}}
+                      <tr>
+                        <td class="transaction-date format-date">{{.Date}}</td>
+                        <td class="transaction-description" title="{{.Description}}">{{.Description}}</td>
+                        <td class="transaction-value positive">{{.Value}}</td>
+                      </tr>
+                    {{end}}
+                  </tbody>
+                </table>
+              </div>
+            {{end}}
+          {{end}}
+        </div>
+
+        <!-- Seção de Saídas -->
+          <div class="movements-section">
+            <h3 class="movements-title exits">Saídas</h3>
+            
+            {{range .Data.Exit}}
+              <div class="category-section">
+                <div class="category-header">
+                  <span class="category-name">{{.Name}}</span>
+                  <span class="category-total negative">{{index $.Data.Totals .ID}}</span>
+                </div>
+
+                {{if .Transactions}}
+                  <table class="transactions-table">
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{range .Transactions}}
+                        <tr>
+                          <td class="transaction-date format-date">{{.Date}}</td>
+                          <td class="transaction-description" title="{{.Description}}">{{.Description}}</td>
+                          <td class="transaction-value negative">{{.Value}}</td>
+                        </tr>
+                      {{end}}
+                    </tbody>
+                  </table>
+                {{else}}
+                  <div class="empty-category">
+                    Nenhuma transação nesta categoria
+                  </div>
+                {{end}}
+              </div>
+            {{end}}
+          </div>
+        
+        <!-- Seção de Totalizadores -->
+        <div class="summary-section">
+          <h3 class="summary-title">Totalizadores</h3>
+          <div class="summary-grid">
+            <div class="summary-card">
+              <div class="summary-label">Décima a Repassar</div>
+              <div class="summary-value">100</div>
+            </div>
+            
+            <div class="summary-card">
+              <div class="summary-label">Ducentésima a Repassar</div>
+              <div class="summary-value">200</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const elements = document.querySelectorAll(".format-date");
+      elements.forEach(el => {
+        const rawDate = el.textContent.trim();
+        const date = new Date(rawDate);
+        if (!isNaN(date)) {
+          const formatter = new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            timeZone: 'UTC'
+          });
+          el.textContent = formatter.format(date);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+{{end}}
