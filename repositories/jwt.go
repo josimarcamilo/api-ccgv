@@ -71,12 +71,16 @@ func Parse(stringToken string) (MyCustomClaims, error) {
 }
 
 func ParseWithContext(c echo.Context) (*MyCustomClaims, error) {
-	authHeader := c.Request().Header.Get("Authorization")
-	if authHeader == "" {
+	authToken := c.Request().Header.Get("Authorization")
+	if authToken == "" {
+		authToken = c.QueryParam("token")
+	}
+
+	if authToken == "" {
 		return nil, errors.New("Token não fornecido")
 	}
 
-	claims, err := Parse(strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer")))
+	claims, err := Parse(strings.TrimSpace(strings.TrimPrefix(authToken, "Bearer")))
 	if err != nil {
 
 		return nil, errors.New("Token inválido")

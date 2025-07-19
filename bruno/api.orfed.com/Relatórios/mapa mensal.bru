@@ -5,14 +5,15 @@ meta {
 }
 
 get {
-  url: {{host}}/reports/monthly-map?start_date=2025-05-16&end_date=2025-05-16
+  url: {{host}}/reports/monthly-map?start_date=2025-01-01&end_date=2025-01-31&token={{token}}
   body: none
   auth: bearer
 }
 
 params:query {
-  start_date: 2025-05-16
-  end_date: 2025-05-16
+  start_date: 2025-01-01
+  end_date: 2025-01-31
+  token: {{token}}
 }
 
 auth:bearer {

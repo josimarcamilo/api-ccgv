@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func OnlyNumbers(input string) (int, error) {
@@ -28,4 +29,17 @@ func OnlyNumbers(input string) (int, error) {
 	}
 
 	return num, nil
+}
+
+func DateToString(t time.Time) string {
+	return t.Format("02/01/2006")
+}
+
+func StringToTime(date string) time.Time {
+	timeValue, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return time.Now()
+	}
+
+	return timeValue
 }

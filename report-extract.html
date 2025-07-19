@@ -327,22 +327,22 @@
             
             <div class="info-card">
               <div class="info-label">Saldo Inicial</div>
-              <div class="info-value">{{.StartBalance}}</div>
+              <div class="info-value format-money">{{.StartBalance}}</div>
             </div>
             
             <div class="info-card">
               <div class="info-label">Total de Entradas</div>
-              <div class="info-value balance-positive">{{.TotalEntry}}</div>
+              <div class="info-value balance-positive format-money">{{.TotalEntry}}</div>
             </div>
             
             <div class="info-card">
               <div class="info-label">Total de Saídas</div>
-              <div class="info-value balance-negative">{{.TotalExit}}</div>
+              <div class="info-value balance-negative format-money">{{.TotalExit}}</div>
             </div>
             
             <div class="info-card">
               <div class="info-label">Saldo Final</div>
-              <div class="info-value">{{.EndBalance}}</div>
+              <div class="info-value format-money">{{.EndBalance}}</div>
             </div>
           </div>
 
@@ -367,7 +367,7 @@
                       <td class="transaction-type {{ if eq .Type 1 }}credit{{ else }}debit{{ end }}">
                         {{ if eq .Type 1 }}Crédito{{ else }}Débito{{ end }}
                       </td>
-                      <td class="transaction-value {{ if eq .Type 1 }}positive{{ else }}negative{{ end }}">
+                      <td class="transaction-value format-money {{ if eq .Type 1 }}positive{{ else }}negative{{ end }}">
                         {{.Value}}
                       </td>
                     </tr>
@@ -399,6 +399,21 @@
             timeZone: 'UTC'
           });
           el.textContent = formatter.format(date);
+        }
+      });
+
+      // Formatar valores em reais
+      const moneyElements = document.querySelectorAll(".format-money");
+      moneyElements.forEach(el => {
+        const raw = el.textContent.trim().replace(/[^0-9.-]/g, '');
+        const value = parseFloat(raw);
+        if (!isNaN(value)) {
+          const formatter = new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 2
+          });
+          el.textContent = formatter.format(value/100);
         }
       });
     });

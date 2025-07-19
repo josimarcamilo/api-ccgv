@@ -406,17 +406,17 @@
 
     <div class="content">
       <div class="period-section">
-        <h2 class="period-title">Período: {{.Data.StartDate}} a {{.Data.EndDate}}</h2>
+        <h2 class="period-title">Período: <span class="format-date">{{.Data.StartDate}}</span> a <span class="format-date">{{.Data.EndDate}}</span></h2>
 
         <div class="balance-grid">
           <div class="balance-card">
             <div class="balance-label">Saldo Anterior</div>
-            <div class="balance-value">{{.Data.StartBalance}}</div>
+            <div class="balance-value format-money">{{.Data.StartBalance}}</div>
           </div>
           
           <div class="balance-card">
             <div class="balance-label">Saldo Final</div>
-            <div class="balance-value">{{.Data.EndBalance}}</div>
+            <div class="balance-value format-money">{{.Data.EndBalance}}</div>
           </div>
         </div>
 
@@ -429,7 +429,7 @@
               <div class="category-section">
                 <div class="category-header">
                   <span class="category-name">{{.Name}}</span>
-                  <span class="category-total positive">{{index $.Data.Totals .ID}}</span>
+                  <span class="category-total positive format-money">{{index $.Data.Totals .ID}}</span>
                 </div>
 
                 <table class="transactions-table">
@@ -445,7 +445,7 @@
                       <tr>
                         <td class="transaction-date format-date">{{.Date}}</td>
                         <td class="transaction-description" title="{{.Description}}">{{.Description}}</td>
-                        <td class="transaction-value positive">{{.Value}}</td>
+                        <td class="transaction-value positive format-money">{{.Value}}</td>
                       </tr>
                     {{end}}
                   </tbody>
@@ -463,7 +463,7 @@
               <div class="category-section">
                 <div class="category-header">
                   <span class="category-name">{{.Name}}</span>
-                  <span class="category-total negative">{{index $.Data.Totals .ID}}</span>
+                  <span class="category-total negative format-money">{{index $.Data.Totals .ID}}</span>
                 </div>
 
                 {{if .Transactions}}
@@ -480,7 +480,7 @@
                         <tr>
                           <td class="transaction-date format-date">{{.Date}}</td>
                           <td class="transaction-description" title="{{.Description}}">{{.Description}}</td>
-                          <td class="transaction-value negative">{{.Value}}</td>
+                          <td class="transaction-value negative format-money">{{.Value}}</td>
                         </tr>
                       {{end}}
                     </tbody>
@@ -527,6 +527,21 @@
             timeZone: 'UTC'
           });
           el.textContent = formatter.format(date);
+        }
+      });
+
+      // Formatar valores em reais
+      const moneyElements = document.querySelectorAll(".format-money");
+      moneyElements.forEach(el => {
+        const raw = el.textContent.trim().replace(/[^0-9.-]/g, '');
+        const value = parseFloat(raw);
+        if (!isNaN(value)) {
+          const formatter = new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 2
+          });
+          el.textContent = formatter.format(value/100);
         }
       });
     });

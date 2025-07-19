@@ -7,6 +7,7 @@ import (
 	"jc-financas/controllers"
 	"jc-financas/models"
 	"jc-financas/repositories"
+	"jc-financas/services"
 	"log"
 	"net/http"
 	"os"
@@ -135,6 +136,8 @@ func main() {
 	e.POST("/transactions/import-csv", transactionHandler.ImportCSV)
 
 	e.GET("/reports/balance", controllers.GetBalance)
+	e.GET("/reports/extract", ReportExtract)
+	e.GET("/reports/monthly-map", ReportMonthlyMap)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -389,4 +392,66 @@ func VerifySession(c echo.Context) error {
 	}
 
 	return nil
+}
+
+// reports
+
+func ReportExtract(c echo.Context) error {
+	claims, err := repositories.ParseWithContext(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": err.Error(),
+		})
+	}
+	var report controllers.ExtractReport
+	if err := c.Bind(&report); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "bind",
+			"message": err.Error(),
+		})
+	}
+
+	if report.StartDate == "" || report.EndDate == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Campo 'start_date' e 'end_date' são obrigatórios",
+		})
+	}
+
+	// return c.JSON(http.StatusOK, map[string]interface{}{
+	// 	"Data": services.GetExtractAllAccounts(report.StartDate, report.EndDate, claims.TeamID),
+	// })
+
+	return c.Render(http.StatusOK, "report-extract", map[string]interface{}{
+		"Data": services.GetExtractAllAccounts(report.StartDate, report.EndDate, claims.TeamID),
+	})
+}
+
+func ReportMonthlyMap(c echo.Context) error {
+	claims, err := repositories.ParseWithContext(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": err.Error(),
+		})
+	}
+	var report controllers.ExtractReport
+	if err := c.Bind(&report); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "bind",
+			"message": err.Error(),
+		})
+	}
+
+	if report.StartDate == "" || report.EndDate == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Campo 'start_date' e 'end_date' são obrigatórios",
+		})
+	}
+
+	// return c.JSON(http.StatusOK, map[string]interface{}{
+	// 	"Data": services.GetMonthlyMap(report.StartDate, report.EndDate, claims.TeamID),
+	// })
+
+	return c.Render(http.StatusOK, "report-mapa", map[string]interface{}{
+		"Data": services.GetMonthlyMap(report.StartDate, report.EndDate, claims.TeamID),
+	})
 }

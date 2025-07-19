@@ -1,20 +1,18 @@
 meta {
-  name: saldos por conta
+  name: extrato de todas as sub contas
   type: http
-  seq: 1
+  seq: 4
 }
 
 get {
-  url: {{host}}/reports/balance?end_date=2025-06-30
+  url: {{host}}/reports/extract?start_date=2025-01-01&end_date=2025-01-31&token={{token}}
   body: none
-  auth: bearer
+  auth: none
 }
 
 params:query {
-  end_date: 2025-06-30
-}
-
-auth:bearer {
+  start_date: 2025-01-01
+  end_date: 2025-01-31
   token: {{token}}
 }
 
