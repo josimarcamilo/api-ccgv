@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
+	"jc-financas/consts"
 	"jc-financas/helpers"
 	"jc-financas/models"
 	"mime/multipart"
@@ -728,8 +729,8 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 		record.AccountID = &dto.AccountID
 
 		if row[COLUMN_ENTRY] != "" {
-			record.Type = 1
-			category.Type = models.CATEGORY_ENTRY
+			record.Type = consts.TransactionTypeEntrada
+			category.Type = consts.CategoryTypeEntry
 			record.Value, err = helpers.OnlyNumbers(row[COLUMN_ENTRY])
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{
@@ -741,8 +742,8 @@ func (h *CRUDHandler) ImportCSV(c echo.Context) error {
 		}
 
 		if row[COLUMN_EXIT] != "" {
-			record.Type = 2
-			category.Type = models.CATEGORY_EXIT
+			record.Type = consts.TransactionTypeSaida
+			category.Type = consts.CategoryTypeExit
 			record.Value, err = helpers.OnlyNumbers(row[COLUMN_EXIT])
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{

@@ -6,9 +6,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const CATEGORY_ENTRY = 1
-const CATEGORY_EXIT = 2
-
 type Category struct {
 	ID              uint           `gorm:"primarykey" json:"id"`
 	CreatedAt       time.Time      `json:"created_at"`
@@ -18,6 +15,6 @@ type Category struct {
 	Type            int8           `gorm:"null" json:"type"`
 	Name            string         `gorm:"size:255;not null" form:"name" json:"name"`
 	UseMap          bool           `gorm:"null;default:false" form:"use_map" json:"use_map"`
-	TipoRepasse     int8           `gorm:"null;default:0" form:"tipo_repasse" json:"tipo_repasse"` // 0 - não repassa, 1 - 10%, 2 - 2,5%
+	TipoRepasse     int8           `gorm:"null;default:0" form:"tipo_repasse" json:"tipo_repasse"`
 	TransactionsMap []Transaction  `gorm:"foreignKey:CategoryMapID;references:ID" json:"transactions"`
 }

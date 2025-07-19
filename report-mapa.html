@@ -496,17 +496,15 @@
         
         <!-- Seção de Totalizadores -->
         <div class="summary-section">
-          <h3 class="summary-title">Totalizadores</h3>
+          <h3 class="summary-title">Valores a Repassar</h3>
           <div class="summary-grid">
-            <div class="summary-card">
-              <div class="summary-label">Décima a Repassar</div>
-              <div class="summary-value">100</div>
-            </div>
-            
-            <div class="summary-card">
-              <div class="summary-label">Ducentésima a Repassar</div>
-              <div class="summary-value">200</div>
-            </div>
+            {{range .Data.Repasse}}
+              <div class="summary-card">
+                <div class="summary-label">{{.Description}}</div>
+                <div>Base de cálculo <span class="summary-value format-money">{{.CalculationBasis}}</span></div>
+                <div>Valor a repassar <span class="summary-value format-money">{{.Repasse}}</span></div>
+              </div>
+            {{end}}
           </div>
         </div>
       </div>

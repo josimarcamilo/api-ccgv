@@ -26,6 +26,7 @@ type ReportMonthlyMap struct {
 	TotalExit    int64
 	EndBalance   int64
 	Totals       map[uint]int64
+	Repasse      []ReportTipoRepasse
 	Entry        []ReportCategoryMap
 	Exit         []ReportCategoryMap
 }
@@ -35,6 +36,14 @@ type ReportCategoryMap struct {
 	Name         string
 	TipoRepasse  int8
 	Transactions []models.Transaction
+}
+
+type ReportTipoRepasse struct {
+	ID               uint
+	Description      string
+	TipoRepasse      int8
+	CalculationBasis int64
+	Repasse          int64
 }
 
 func GetExtractAllAccounts(startDate, endDate string, teamId uint) []ReportExtractAllAccount {
@@ -95,6 +104,10 @@ func GetMonthlyMap(startDate, endDate string, teamId uint) ReportMonthlyMap {
 
 	totalEntradas := int64(0)
 	totalSaidas := int64(0)
+	somaRepasse2_5 := int64(0)
+	somaRepasse10 := int64(0)
+	somaRepasse75 := int64(0)
+
 	saldoIncial, saldoFinal := repositories.GetBalanceToMap(startDate, endDate, teamId)
 	categoriesMap = repositories.GetMonthlyMap(startDate, endDate, teamId)
 
@@ -119,6 +132,15 @@ func GetMonthlyMap(startDate, endDate string, teamId uint) ReportMonthlyMap {
 
 		sumCategory := int64(0)
 		for _, tran := range category.TransactionsMap {
+			if category.TipoRepasse == consts.TipoRepasse2_5 {
+				somaRepasse2_5 = somaRepasse2_5 + int64(tran.Value)
+			}
+			if category.TipoRepasse == consts.TipoRepasse10 {
+				somaRepasse10 = somaRepasse10 + int64(tran.Value)
+			}
+			if category.TipoRepasse == consts.TipoRepasse75 {
+				somaRepasse75 = somaRepasse75 + int64(tran.Value)
+			}
 			if tran.Type == consts.TransactionTypeEntrada {
 				totalEntradas = totalEntradas + int64(tran.Value)
 			}
@@ -139,7 +161,30 @@ func GetMonthlyMap(startDate, endDate string, teamId uint) ReportMonthlyMap {
 		TotalEntry:   totalEntradas,
 		TotalExit:    totalSaidas,
 		Totals:       categoriesTotals,
-		Entry:        entryCategories,
-		Exit:         exitCategories,
+		Repasse: []ReportTipoRepasse{
+			{
+				ID:               1,
+				Description:      "2,5%",
+				TipoRepasse:      consts.TipoRepasse2_5,
+				CalculationBasis: somaRepasse2_5,
+				Repasse:          (somaRepasse2_5 * 25) / 1000,
+			},
+			{
+				ID:               2,
+				Description:      "10%",
+				TipoRepasse:      consts.TipoRepasse10,
+				CalculationBasis: somaRepasse10,
+				Repasse:          (somaRepasse10 * 10) / 100,
+			},
+			{
+				ID:               3,
+				Description:      "75%",
+				TipoRepasse:      consts.TipoRepasse75,
+				CalculationBasis: somaRepasse75,
+				Repasse:          (somaRepasse75 * 75) / 100,
+			},
+		},
+		Entry: entryCategories,
+		Exit:  exitCategories,
 	}
 }
