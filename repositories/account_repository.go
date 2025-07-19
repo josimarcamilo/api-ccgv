@@ -164,7 +164,7 @@ func GetBalanceToMap(startDate, endDate string, teamId uint) (int64, int64) {
 	query := DB.Model(&models.Transaction{}).
 		Select("SUM(CASE WHEN type = 1 THEN value ELSE -value END) AS total").
 		Where("team_id = ?", teamId).
-		Where("date <= ?", startDate).
+		Where("date < ?", startDate).
 		Where("account_id is not null")
 
 	query.Scan(&startBalanceMap)

@@ -2,6 +2,7 @@ package services
 
 import (
 	"jc-financas/consts"
+	"jc-financas/helpers"
 	"jc-financas/models"
 	"jc-financas/repositories"
 )
@@ -58,7 +59,8 @@ func GetExtractAllAccounts(startDate, endDate string, teamId uint) []ReportExtra
 	// somar saidas de Transactions
 	for _, account := range accounts {
 		saldoIncial = 0
-		saldoIncial = repositories.GetBalance(account, startDate)
+		diaAnterior := helpers.StringToTime(startDate).AddDate(0, 0, -1).Format("2006-01-02")
+		saldoIncial = repositories.GetBalance(account, diaAnterior)
 		saldoFinal = 0
 		saldoFinal = repositories.GetBalance(account, endDate)
 		var totalEntradas int64
