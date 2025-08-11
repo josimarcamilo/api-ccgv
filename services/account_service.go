@@ -72,9 +72,6 @@ func GetExtractAllAccounts(startDate, endDate string, teamId uint) []ReportExtra
 			transactions = account.VirtualTransactions
 		}
 		for _, tran := range transactions {
-			if tran.IsTransfer {
-				continue
-			}
 			if tran.Type == consts.TransactionTypeEntrada {
 				totalEntradas = totalEntradas + int64(tran.Value)
 			}
