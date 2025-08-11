@@ -66,7 +66,7 @@ func GetExtractAllAccounts(startDate, endDate string, teamId uint) []ReportExtra
 		var totalEntradas int64
 		totalEntradas = 0
 		var totalSaidas int64
-		totalEntradas = 0
+		totalSaidas = 0
 		transactions := account.RealTransactions
 		if account.Virtual {
 			transactions = account.VirtualTransactions
