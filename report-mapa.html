@@ -37,7 +37,7 @@
     }
 
     .header h1 {
-      font-size: 28px;
+      font-size: 12px;
       font-weight: 600;
       margin-bottom: 8px;
       letter-spacing: -0.025em;
@@ -45,7 +45,7 @@
 
     .header p {
       opacity: 0.8;
-      font-size: 14px;
+      font-size: 12px;
     }
 
     .content {
@@ -58,7 +58,7 @@
     }
 
     .period-title {
-      font-size: 20px;
+      font-size: 12px;
       font-weight: 600;
       color: #1a202c;
       margin-bottom: 24px;
@@ -76,8 +76,8 @@
     .balance-card {
       background: #f7fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 7px;
+      padding: 10px;
       transition: all 0.2s ease;
     }
 
@@ -87,7 +87,7 @@
     }
 
     .balance-label {
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 500;
       color: #718096;
       text-transform: uppercase;
@@ -96,7 +96,7 @@
     }
 
     .balance-value {
-      font-size: 18px;
+      font-size: 12px;
       font-weight: 600;
       color: #2d3748;
       font-family: 'Courier New', monospace;
@@ -111,11 +111,11 @@
     }
 
     .movements-section {
-      margin-bottom: 40px;
+      margin-bottom: 32px;
     }
 
     .movements-title {
-      font-size: 20px;
+      font-size: 12px;
       font-weight: 600;
       color: #1a202c;
       margin-bottom: 24px;
@@ -148,7 +148,7 @@
     }
 
     .category-section {
-      margin-bottom: 32px;
+      margin-bottom: 10px;
       background: #f8fafc;
       border-radius: 12px;
       overflow: hidden;
@@ -158,19 +158,19 @@
     .category-header {
       background: #1a202c;
       color: white;
-      padding: 16px 20px;
+      padding: 8px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
     .category-name {
-      font-size: 16px;
+      font-size: 12px;
       font-weight: 600;
     }
 
     .category-total {
-      font-size: 16px;
+      font-size: 12px;
       font-weight: 700;
       font-family: 'Courier New', monospace;
     }
@@ -201,7 +201,7 @@
       text-align: left;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      height: 36px;
+      height: 30px;
       vertical-align: middle;
       padding-left: 12px;
       padding-right: 12px;
@@ -229,7 +229,7 @@
       padding: 0;
       font-size: 10px;
       color: #64748b;
-      height: 32px;
+      height: 25px;
       vertical-align: middle;
       padding-left: 12px;
       padding-right: 12px;
@@ -268,7 +268,7 @@
     }
 
     .summary-title {
-      font-size: 18px;
+      font-size: 12px;
       font-weight: 600;
       color: #1a202c;
       margin-bottom: 20px;
@@ -291,7 +291,7 @@
     }
 
     .summary-label {
-      font-size: 14px;
+      font-size: 12px;
       opacity: 0.9;
       margin-bottom: 8px;
       text-transform: uppercase;
@@ -299,7 +299,7 @@
     }
 
     .summary-value {
-      font-size: 20px;
+      font-size: 12px;
       font-weight: 700;
       font-family: 'Courier New', monospace;
     }
@@ -390,10 +390,6 @@
       .content {
         padding: 20px;
       }
-
-      .category-section {
-        page-break-inside: avoid;
-      }
     }
   </style>
 </head>
@@ -412,6 +408,16 @@
           <div class="balance-card">
             <div class="balance-label">Saldo Anterior</div>
             <div class="balance-value format-money">{{.Data.StartBalance}}</div>
+          </div>
+
+          <div class="balance-card">
+            <div class="balance-label">Total de Entradas</div>
+            <div class="balance-positive balance-value format-money">{{.Data.TotalEntry}}</div>
+          </div>
+
+          <div class="balance-card">
+            <div class="balance-label">Total de Saídas</div>
+            <div class="balance-negative balance-value format-money">{{.Data.TotalExit}}</div>
           </div>
           
           <div class="balance-card">
@@ -499,11 +505,13 @@
           <h3 class="summary-title">Valores a Repassar</h3>
           <div class="summary-grid">
             {{range .Data.Repasse}}
-              <div class="summary-card">
-                <div class="summary-label">{{.Description}}</div>
-                <div>Base de cálculo <span class="summary-value format-money">{{.CalculationBasis}}</span></div>
-                <div>Valor a repassar <span class="summary-value format-money">{{.Repasse}}</span></div>
-              </div>
+              {{if .Repasse }}
+                <div class="summary-card">
+                  <div class="summary-label">{{.Description}}</div>
+                  <div>Base de cálculo <span class="summary-value format-money">{{.CalculationBasis}}</span></div>
+                  <div>Valor a repassar <span class="summary-value format-money">{{.Repasse}}</span></div>
+                </div>
+              {{end}}
             {{end}}
           </div>
         </div>
