@@ -40,33 +40,34 @@ func GetAllBalances(endDate string, teamId uint) AccountBalanceReport {
 	var accountBalances []AccountBalance
 	DB.Model(&models.Transaction{}).
 		Joins("JOIN accounts ON accounts.id = transactions.account_id").
-		Select("accounts.name AS name, account_id, SUM(CASE WHEN type = 1 THEN value ELSE -value END) AS total").
+		Select("accounts.id as account_id, accounts.name as name, SUM(CASE WHEN type = 1 THEN value ELSE -value END) AS balance").
 		Where("transactions.team_id = ?", teamId).
-		Where("account_id IS NOT NULL").
-		Where("date <= ?", endDate).
-		Group("accounts.name, account_id").
-		Order("total desc").
+		Where("transactions.account_id IS NOT NULL").
+		Where("transactions.date <= ?", endDate).
+		Group("accounts.id, accounts.name").
+		Order("balance desc").
 		Scan(&accountBalances)
 
-	var virtualAccountBalances []VirtualAccountBalance
+	var virtualAccountBalances []AccountBalance
 	DB.Model(&models.Transaction{}).
-		Select("account_virtual_id, SUM(CASE WHEN type = 1 THEN value ELSE -value END) as total").
-		Where("team_id = ?", teamId).
-		Where("account_virtual_id is not null").
-		Where("date <= ?", endDate).
-		Group("account_virtual_id").
+		Joins("JOIN accounts ON accounts.id = transactions.account_virtual_id").
+		Select("accounts.id as account_id, accounts.name as name, SUM(CASE WHEN type = 1 THEN value ELSE -value END) as balance").
+		Where("transactions.team_id = ?", teamId).
+		Where("transactions.account_virtual_id is not null").
+		Where("transactions.date <= ?", endDate).
+		Group("accounts.id, accounts.name").
 		Scan(&virtualAccountBalances)
 
 	// Soma dos saldos de contas reais
 	var realTotal int
 	for _, acc := range accountBalances {
-		realTotal += acc.Total
+		realTotal += acc.Balance
 	}
 
 	// Soma dos saldos de contas virtuais
 	var virtualTotal int
 	for _, vAcc := range virtualAccountBalances {
-		virtualTotal += vAcc.Total
+		virtualTotal += vAcc.Balance
 	}
 
 	// Balance = total das reais - total das virtuais
