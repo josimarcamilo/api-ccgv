@@ -8,7 +8,8 @@ import (
 )
 
 type Report struct {
-	EndDate string `query:"end_date" json:"end_date"`
+	AccountID uint   `param:"account"`
+	EndDate   string `query:"end_date" json:"end_date"`
 }
 
 type ExtractReport struct {

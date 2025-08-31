@@ -114,6 +114,7 @@ func main() {
 	e.POST("/accounts", controllers.CreateAccount)
 	e.GET("/accounts", controllers.ListAccounts)
 	e.GET("/accounts/:account", controllers.GetAccount)
+	e.GET("/accounts/:account/balance", controllers.GetAccountBalance)
 	e.PUT("/accounts/:account", controllers.UpdadeAccount)
 	e.POST("/account-balance", accountHandler.GetAccountBalance)
 

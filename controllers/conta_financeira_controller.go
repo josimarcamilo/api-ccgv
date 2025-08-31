@@ -76,6 +76,49 @@ func GetAccount(c echo.Context) error {
 	return nil
 }
 
+func GetAccountBalance(c echo.Context) error {
+	claims, err := repositories.ParseWithContext(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	var filter Report
+	// bind
+	if err := c.Bind(&filter); err != nil {
+		return errors.Wrap(err, "bind request")
+	}
+
+	// validacao
+	if filter.EndDate == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Campo end_date obrigatório",
+		})
+	}
+
+	if filter.AccountID == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Conta obrigatória",
+		})
+	}
+
+	account, err := repositories.GetAccount(filter.AccountID, claims.TeamID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":   "Conta não encontrada",
+			"message": err.Error(),
+		})
+	}
+
+	balance := repositories.GetBalance(*account, filter.EndDate)
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"balance": balance,
+	})
+	return nil
+}
+
 func UpdadeAccount(c echo.Context) error {
 	claims, err := repositories.ParseWithContext(c)
 	if err != nil {
