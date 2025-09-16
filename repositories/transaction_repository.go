@@ -109,7 +109,11 @@ func GetTransactions(teamID uint, filter models.TransactionFilter) ([]models.Tra
 		query.Where("account_virtual_id = ?", filter.AccountVirtualID)
 	}
 
-	query.Order("date DESC")
+	if filter.OrderDate != "" {
+		query.Order("date " + filter.OrderDate)
+	} else {
+		query.Order("date DESC")
+	}
 
 	if err := query.Preload("Account").Preload("AccountVirtual").Preload("Category").Preload("CategoryMap").Find(&models).Error; err != nil {
 		return nil, err

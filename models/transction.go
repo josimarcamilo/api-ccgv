@@ -65,4 +65,5 @@ type TransactionFilter struct {
 	EndDate          string `query:"end_date"`
 	AccountID        string `query:"account_id"`
 	AccountVirtualID string `query:"account_virtual_id"`
+	OrderDate        string `query:"order_date"` // ASC ou DESC
 }
