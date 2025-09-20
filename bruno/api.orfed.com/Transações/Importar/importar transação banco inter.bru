@@ -1,0 +1,21 @@
+meta {
+  name: importar transação banco inter
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/transactions/import-ofx
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:multipart-form {
+  account_id: 17
+  file: @file(/Users/josimar/Downloads/Extrato-inter-setembro-01-09-2025-a-20-09-2025-OFX.ofx)
+  bank: inter
+}

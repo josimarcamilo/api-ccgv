@@ -7,6 +7,7 @@ import (
 	"jc-financas/consts"
 	"jc-financas/helpers"
 	"jc-financas/models"
+	"jc-financas/services/ofx"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -467,7 +468,7 @@ type TransactionOFX struct {
 
 type AccountImportOFX struct {
 	AccountID uint                  `json:"account_id" form:"account_id"`
-	Bank      string                `json:"bank" form:"bank"`
+	Bank      string                `json:"bank" form:"bank"` // bradesco, inter
 	File      *multipart.FileHeader `json:"file" form:"file"`
 }
 
@@ -517,6 +518,32 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error":   "Erro",
 			"message": "Erro ao ler o arquivo",
+		})
+	}
+	if dto.Bank == "inter" {
+		transactions, err := ofx.TranslaterOfxInter(file, *account)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error":   dto.Bank + " Erro ao processar arquivo OFX",
+				"message": err.Error(),
+			})
+		}
+
+		for _, tx := range transactions {
+			exists := models.Transaction{}
+			if err := h.DB.Where("team_id = ?", claims.TeamID).Where("external_id = ?", tx.ExternalId).First(&exists).Error; err != nil {
+				if err := h.DB.Create(&tx).Error; err != nil {
+					return c.JSON(http.StatusInternalServerError, map[string]string{
+						"error":   "Erro ao salvar",
+						"message": "Erro ao salvar a transacao " + fmt.Sprintf("%v", tx.Value),
+					})
+				}
+			}
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{
+			"error":   "false",
+			"message": dto.Bank + " Arquivo OFX recebido com sucesso",
 		})
 	}
 	src, err := file.Open()
