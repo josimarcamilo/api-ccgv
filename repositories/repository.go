@@ -520,108 +520,25 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 			"message": "Erro ao ler o arquivo",
 		})
 	}
-	if dto.Bank == "inter" {
-		transactions, err := ofx.TranslaterOfxInter(file, *account)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"error":   dto.Bank + " Erro ao processar arquivo OFX",
-				"message": err.Error(),
-			})
-		}
-
-		for _, tx := range transactions {
-			exists := models.Transaction{}
-			if err := h.DB.Where("team_id = ?", claims.TeamID).Where("external_id = ?", tx.ExternalId).First(&exists).Error; err != nil {
-				if err := h.DB.Create(&tx).Error; err != nil {
-					return c.JSON(http.StatusInternalServerError, map[string]string{
-						"error":   "Erro ao salvar",
-						"message": "Erro ao salvar a transacao " + fmt.Sprintf("%v", tx.Value),
-					})
-				}
-			}
-		}
-
-		return c.JSON(http.StatusOK, map[string]string{
-			"error":   "false",
-			"message": dto.Bank + " Arquivo OFX recebido com sucesso",
-		})
-	}
-	src, err := file.Open()
+	transactions, err := ofx.TranslaterOfxInter(file, *account)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error":   "Erro ao abrir o arquivo",
+			"error":   dto.Bank + " Erro ao processar arquivo OFX",
 			"message": err.Error(),
 		})
 	}
-	defer src.Close()
-	scanner := bufio.NewScanner(src)
-	transactions := []TransactionOFX{}
-	var current TransactionOFX
-	rgxDate := regexp.MustCompile(`\d{8}`)
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-
-		if strings.HasPrefix(line, "<STMTTRN>") {
-			current = TransactionOFX{}
-		} else if strings.HasPrefix(line, "<TRNTYPE>") {
-			current.Type = strings.TrimPrefix(line, "<TRNTYPE>")
-		} else if strings.HasPrefix(line, "<DTPOSTED>") {
-			match := rgxDate.FindString(line)
-			if match != "" {
-				parsedDate, _ := time.Parse("20060102", match)
-				current.Date = parsedDate.Format("2006-01-02")
-			}
-		} else if strings.HasPrefix(line, "<TRNAMT>") {
-			current.Amount = strings.TrimPrefix(line, "<TRNAMT>")
-		} else if strings.HasPrefix(line, "<FITID>") {
-			current.FITID = strings.TrimPrefix(line, "<FITID>")
-		} else if strings.HasPrefix(line, "<CHECKNUM>") {
-			current.CheckNum = strings.TrimPrefix(line, "<CHECKNUM>")
-		} else if strings.HasPrefix(line, "<MEMO>") {
-			current.Description = strings.TrimPrefix(line, "<MEMO>")
-		} else if strings.HasPrefix(line, "</STMTTRN>") {
-			transactions = append(transactions, current)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error":   "Erro ao ler o arquivo",
-			"message": err.Error(),
-		})
-	}
-
-	fmt.Printf("%v %v %v %v %v\n", "Tipo", "Data", "Valor", "Código", "Descrição")
-	fmt.Println(strings.Repeat("-", 70))
 
 	for _, tx := range transactions {
-		fmt.Printf("%v %v %v %v %v\n", tx.Type, tx.Date, tx.Amount, tx.FITID, tx.Description)
-		record := models.Transaction{}
-		if err := h.DB.Where("team_id = ?", claims.TeamID).Where("external_id = ?", tx.FITID).First(&record).Error; err != nil {
-			//criar
-			record.TeamID = claims.TeamID
-			record.Date = tx.Date
-			record.Description = tx.Description
-			record.ExternalId = &tx.FITID
-			record.Type = 1
-			record.AccountID = &dto.AccountID
-			record.Value, err = helpers.OnlyNumbers(tx.Amount)
-			if err != nil {
-				return c.JSON(http.StatusInternalServerError, map[string]string{
-					"error":   "Erro OnlyNumbers",
-					"message": err.Error(),
-				})
-			}
-
-			if tx.Type == "DEBIT" {
-				record.Type = 2
-			}
-
-			if err := h.DB.Create(&record).Error; err != nil {
+		exists := models.Transaction{}
+		if err := h.DB.
+			Where("team_id = ?", claims.TeamID).
+			Where("account_id = ?", account.ID).
+			Where("external_id = ?", tx.ExternalId).
+			First(&exists).Error; err != nil {
+			if err := h.DB.Create(&tx).Error; err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{
 					"error":   "Erro ao salvar",
-					"message": "Erro ao salvar a transacao " + fmt.Sprintf("%v", tx.Amount),
+					"message": "Erro ao salvar a transacao " + fmt.Sprintf("%v", tx.Value),
 				})
 			}
 		}
@@ -629,7 +546,7 @@ func (h *CRUDHandler) ImportOFX(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"error":   "false",
-		"message": "Arquivo OFX recebido com sucesso",
+		"message": dto.Bank + " Arquivo OFX recebido com sucesso",
 	})
 }
 

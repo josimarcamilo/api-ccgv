@@ -30,6 +30,8 @@ func TranslaterOfxInter(file *multipart.FileHeader, account models.Account) ([]m
 
 	var transactions []TransactionOFX
 	var current TransactionOFX
+	var bankCode string
+	var bankName string
 	rgxDate := regexp.MustCompile(`\d{8}`)
 
 	fmt.Println("---- Lendo OFX do Inter ----")
@@ -42,11 +44,17 @@ func TranslaterOfxInter(file *multipart.FileHeader, account models.Account) ([]m
 		fmt.Println("Linha:", line)
 
 		switch {
+		case strings.HasPrefix(line, "<FID>"):
+			bankCode = cleanOFXTag(line, "FID")
+			fmt.Println("FID:", bankCode)
+		case strings.HasPrefix(line, "<ORG>"):
+			bankName = cleanOFXTag(line, "ORG")
+			fmt.Println("ORG:", bankName)
 		case strings.HasPrefix(line, "<STMTTRN>"):
 			current = TransactionOFX{}
 
 		case strings.HasPrefix(line, "<TRNTYPE>"):
-			current.Type = strings.TrimPrefix(line, "<TRNTYPE>")
+			current.Type = cleanOFXTag(line, "TRNTYPE")
 
 		case strings.HasPrefix(line, "<DTPOSTED>"):
 			match := rgxDate.FindString(line)
@@ -56,7 +64,7 @@ func TranslaterOfxInter(file *multipart.FileHeader, account models.Account) ([]m
 			}
 
 		case strings.HasPrefix(line, "<TRNAMT>"):
-			current.Amount = strings.TrimPrefix(line, "<TRNAMT>")
+			current.Amount = cleanOFXTag(line, "TRNAMT")
 
 		case strings.HasPrefix(line, "<FITID>"):
 			current.FITID = cleanOFXTag(line, "FITID")
