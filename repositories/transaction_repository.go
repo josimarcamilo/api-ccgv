@@ -109,6 +109,14 @@ func GetTransactions(teamID uint, filter models.TransactionFilter) ([]models.Tra
 		query.Where("account_virtual_id = ?", filter.AccountVirtualID)
 	}
 
+	if filter.CategoryID != "" && filter.CategoryID != "sem_categoria" {
+		query.Where("category_id = ?", filter.CategoryID)
+	}
+
+	if filter.CategoryID == "sem_categoria" {
+		query.Where("category_id IS NULL")
+	}
+
 	if filter.OrderDate != "" {
 		query.Order("date " + filter.OrderDate)
 	} else {
