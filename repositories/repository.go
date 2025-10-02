@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"bufio"
 	"encoding/csv"
 	"fmt"
 	"jc-financas/consts"
@@ -12,9 +11,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gorilla/sessions"
