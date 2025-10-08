@@ -5,14 +5,15 @@ meta {
 }
 
 get {
-  url: {{host}}/categories
+  url: {{host}}/categories?use_map=0&type=1&parent_id=10
   body: none
   auth: bearer
 }
 
 params:query {
-  ~use_map: 1
-  ~type: 2
+  use_map: 0
+  type: 1
+  parent_id: 10
 }
 
 auth:bearer {

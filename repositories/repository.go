@@ -250,6 +250,11 @@ func (h *CRUDHandler) ListCategories(c echo.Context) error {
 		query.Where("use_map = ?", useMapParam)
 	}
 
+	parentIDParam := c.QueryParam("parent_id")
+	if parentIDParam != "" {
+		query.Where("parent_id = ?", parentIDParam)
+	}
+
 	var records []models.Category
 	if err := query.Order("id ASC").Find(&records).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{

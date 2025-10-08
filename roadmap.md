@@ -70,3 +70,12 @@ listar os registros nessa mesma tela
 
 # Sitema
 - [] colocar alerts de sucesso e falha
+
+# Melhorias
+- [x] filtrar transacoes sem categoria
+- [] filtrar transacoes sem categoria do mapa (subcategoria)
+- [] filtrar transacoes sem conta virtual
+- [] filtrar transacoes marcadas como transferencias
+# Melhorias secundárias
+- [] criar configs para a conta e permissoes para a conta
+- [] criar permissoe para o usuário

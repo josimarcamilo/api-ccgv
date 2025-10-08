@@ -1,11 +1,11 @@
 meta {
-  name: criar categoria
+  name: atualizar categoria
   type: http
-  seq: 2
+  seq: 3
 }
 
-post {
-  url: {{host}}/categories
+put {
+  url: {{host}}/categories/1
   body: json
   auth: bearer
 }
@@ -16,11 +16,11 @@ auth:bearer {
 
 body:json {
   {
-    "name": "cat saidas",
-    "type": 2,
-    "use_map": true,
-    "tipo_repasse": 1,
-    "parent_id": null
+    "type": 1,
+    "name": "entrada",
+    "use_map": false,
+    "tipo_repasse": 0,
+    "parent_id": 10
   }
 }
 
