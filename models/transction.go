@@ -22,6 +22,7 @@ type Transaction struct {
 	AccountVirtualID *uint `json:"AccountVirtualID"`
 	CategoryID       *uint `json:"CategoryID"`
 	CategoryMapID    *uint `json:"CategoryMapID"`
+	SubCategoryID    *uint // Nova coluna
 
 	Type        int8   `gorm:"not null"` // 1 - Entrada, 2 - Saída
 	IsTransfer  bool   `gorm:"not null; default:false"`
@@ -37,6 +38,7 @@ type Transaction struct {
 	AccountVirtual Account  `gorm:"foreignKey:AccountVirtualID"`
 	Category       Category `gorm:"foreignKey:CategoryID"`
 	CategoryMap    Category `gorm:"foreignKey:CategoryMapID"`
+	SubCategory    Category `gorm:"foreignKey:SubCategoryID"`
 }
 
 type TransactionList struct {
